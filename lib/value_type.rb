@@ -44,7 +44,7 @@ class ValueType
 
   def to_h
     self.class.attributes
-      .map { |attr| [attr.name, send(attr.name)] }
+      .map { |attr| [attr.name, public_send(attr.name)] }
       .to_h
   end
 
@@ -65,7 +65,7 @@ class ValueType
       .map { |key, value| "#{key}=#{value.inspect}" }
       .join(" ")
 
-    "#<#{self.class.name} #{attrs}>"
+    "#<#{self.class} #{attrs}>"
   end
 
   private

@@ -16,6 +16,11 @@ RSpec.describe ValueType do
       )
     end
 
+    it "does not mutate constructor params" do
+      params = { name: 'Fido', trained?: true }
+      expect { Dog.new(params) }.not_to change { params }
+    end
+
     it "does not define attr writers" do
       dog = Dog.new(name: 'Fido', trained?: true)
 
@@ -31,8 +36,8 @@ RSpec.describe ValueType do
 
     it "can not be constructed with undefined attributes" do
       expect {
-        Dog.new(name: 'Fido', trained?: true, meow: 'cattt')
-      }.to raise_error(ArgumentError, /meow/)
+        Dog.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
+      }.to raise_error(ArgumentError, "Unrecognised attributes: :meow, :moo")
     end
 
     it "can do non-destructive updates" do
