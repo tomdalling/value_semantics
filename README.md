@@ -2,6 +2,9 @@
 
 Immutable struct-like value classes, with light-weight validation and coercion.
 
+These are intended for internal use, as opposed to validating user input like ActiveRecord.
+Invalid or missing attributes cause an exception intended for developers,
+not an error message intended for the user.
 
 ## Basic Usage
 
@@ -32,7 +35,7 @@ tom.to_h  #=> { :name => "Tom", :age => 31 }
 #
 # Non-destructive updates
 #
-old_tom = p.with(age: 99)
+old_tom = tom.with(age: 99)
 
 old_tom  #=> #<Person name="Tom" age=99>
 tom      #=> #<Person name="Tom" age=31> (unchanged)
@@ -57,16 +60,18 @@ which means you can use `Class` objects (like `String`) and also `Regexp` object
 ```ruby
 class Person < ValueType
   def_attr :name, String
-  def_attr :phone, %r{(\d\d\d\) \d\d\d-\d\d\d\d}
+  def_attr :birthday, /\d\d\d\d-\d\d-\d\d/
 end
 
-Person.new(name: 5)
+Person.new(name: 'Tom', ...)  # works
+Person.new(name: 5, ...)
 #=> ArgumentError:
 #=>     Value for attribute 'name' is not valid: 5
 
-Person.new(phone: "hello")
+Person.new(birthday: "1970-01-01", ...)  # works
+Person.new(birthday: "hello", ...)
 #=> ArgumentError:
-#=>     Value for attribute 'phone' is not valid: "hello"
+#=>     Value for attribute 'birthday' is not valid: "hello"
 ```
 
 A custom validator might look something like this:
@@ -115,7 +120,7 @@ Person.new(birthday: 42)
 #=>     Value for attribute 'birthday' is not valid: 42
 ```
 
-Coercion happens _before_ validation.
+Coercion happens before validation.
 If coercion is not possible, one option is to return the value unchanged,
 allowing the validator to fail instead of raising an error within the block.
 
