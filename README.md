@@ -101,8 +101,8 @@ Default attribute values also pass through validation.
 Coercion blocks can convert invalid values into valid ones, where possible.
 
 ```ruby
-class Person
-  def_attr birthday do |value|
+class Person < ValueType
+  def_attr :birthday do |value|
     case value
     when Date then value
     when String then Date.parse(value)
@@ -125,6 +125,19 @@ If coercion is not possible, one option is to return the value unchanged,
 allowing the validator to fail instead of raising an error within the block.
 
 Default attribute values also pass through coercion.
+
+## All Together
+
+```ruby
+class Coordinate < ValueType
+  def_attr(:latitude, Float, default: 0) { |value| value.to_f }
+  def_attr(:longitude, Float, default: 0) { |value| value.to_f }
+end
+
+Coordinate.new(longitude: "123")
+#=> <Coordinate latitude=0.0 longitude=123.0>
+```
+
 
 ## Installation
 
