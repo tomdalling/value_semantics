@@ -3,8 +3,10 @@ require "spec_helper"
 RSpec.describe ValueType do
   context 'basic usage' do
     class Dog < ValueType
-      def_attr :name
-      def_attr :trained?
+      declare_attributes do
+        name
+        trained?
+      end
     end
 
     it "has a keyword constructor and attr readers" do
@@ -53,24 +55,6 @@ RSpec.describe ValueType do
       expect(dog.to_h).to eq({ name: 'Fido', trained?: false })
     end
 
-    it "defines #==, #eql?, and #hash" do
-      dog1 = Dog.new(name: 'Fido', trained?: true)
-      dog2 = Dog.new(name: 'Fido', trained?: true)
-
-      expect(dog1 == dog2).to be(true)
-      expect(dog1.eql?(dog2)).to be(true)
-      expect(dog1.hash).to eq(dog2.hash)
-
-      diff_dog = dog1.with(name: 'Scruffy')
-
-      expect(dog1 == diff_dog).to be(false)
-      expect(dog1.eql?(diff_dog)).to be(false)
-      expect(dog1.hash).not_to eq(diff_dog.hash)
-
-      hash_key_test = { dog1 => 'woof' }.merge(dog2 => 'bark')
-      expect(hash_key_test).to eq({ dog1 => 'bark' })
-    end
-
     it "has a human-friendly #inspect string" do
       dog = Dog.new(name: 'Fido', trained?: true)
       expect(dog.inspect).to eq('#<Dog name="Fido" trained?=true>')
@@ -79,7 +63,9 @@ RSpec.describe ValueType do
 
   context 'default values' do
     class Cat < ValueType
-      def_attr :name, default: 'Kitty'
+      declare_attributes do
+        name default: 'Kitty'
+      end
     end
 
     it "uses the default if no value is given" do
@@ -103,7 +89,9 @@ RSpec.describe ValueType do
     end
 
     class Birb < ValueType
-      def_attr :wings, WingValidator
+      declare_attributes do
+        wings WingValidator
+      end
     end
 
     it "accepts values that pass the validator" do
@@ -117,11 +105,13 @@ RSpec.describe ValueType do
 
   context 'coercion' do
     class Person < ValueType
-      def_attr :likes, Array do |likes|
-        if likes.is_a?(String)
-          likes.split(',').map(&:strip)
-        else
-          likes
+      declare_attributes do
+        likes Array do |likes|
+          if likes.is_a?(String)
+            likes.split(',').map(&:strip)
+          else
+            likes
+          end
         end
       end
     end
@@ -139,14 +129,71 @@ RSpec.describe ValueType do
     end
   end
 
+  context "equality" do
+    class DogChild < Dog
+    end
+
+    let(:dog1) { Dog.new(name: 'Fido', trained?: true) }
+    let(:dog2) { Dog.new(name: 'Fido', trained?: true) }
+    let(:different) { Dog.new(name: 'Brutus', trained?: false) }
+    let(:child) { DogChild.new(name: 'Fido', trained?: true) }
+
+    it "defines loose equality between subclasses with #===" do
+      expect(dog1).to eq(dog2)
+      expect(dog1).not_to eq(different)
+      expect(dog1).not_to eq("hello")
+
+      expect(dog1).to eq(child)
+      expect(child).to eq(dog1)
+    end
+
+    it "defines strict equality with #eql?" do
+      expect(dog1.eql?(dog2)).to be(true)
+      expect(dog1.eql?(different)).to be(false)
+
+      expect(dog1.eql?(child)).to be(false)
+      expect(child.eql?(dog1)).to be(false)
+    end
+
+    it "allows objects to be used as keys in Hash objects" do
+      expect(dog1.hash).to eq(dog2.hash)
+      expect(dog1.hash).not_to eq(different.hash)
+
+      hash_key_test = { dog1 => 'woof', different => 'diff' }.merge(dog2 => 'bark')
+      expect(hash_key_test).to eq({ dog1 => 'bark', different => 'diff' })
+    end
+
+    it "hashes differently depending on class" do
+      expect(dog1.hash).not_to eq(child.hash)
+    end
+  end
+
+  context 'inheritance' do
+    class Wolf < Dog
+      declare_attributes do
+        teeth
+      end
+    end
+
+    class EmptyWolf < Dog
+    end
+
+    it 'inherits attributes' do
+      expect { EmptyWolf.new(name: 'Fido', trained?: false) }.not_to raise_error
+      expect { Wolf.new(teeth: 1, name: 'Fido', trained?: false) }.not_to raise_error
+    end
+  end
+
   context 'complicated usage' do
     class RocketSurgery < ValueType
-      def_attr :bang!, default: 111
-      def_attr :qmark?, default: 222
-      def_attr :widgets, String, default: [4,5,6] do |widgets|
-        case widgets
-        when Array then widgets.join('|')
-        else widgets
+      declare_attributes do
+        bang! default: 111
+        qmark? default: 222
+        widgets String, default: [4,5,6] do |widgets|
+          case widgets
+          when Array then widgets.join('|')
+          else widgets
+          end
         end
       end
     end
