@@ -12,8 +12,10 @@ not an error message intended for the user.
 require 'value_type'
 
 class Person < ValueType
-  def_attr :name
-  def_attr :age, default: 31
+  def_attributes do
+    name
+    age default: 31
+  end
 end
 
 tom = Person.new(name: 'Tom')
@@ -59,8 +61,10 @@ which means you can use `Class` objects (like `String`) and also `Regexp` object
 
 ```ruby
 class Person < ValueType
-  def_attr :name, String
-  def_attr :birthday, /\d\d\d\d-\d\d-\d\d/
+  def_attributes do
+    name String
+    birthday /\d\d\d\d-\d\d-\d\d/
+  end
 end
 
 Person.new(name: 'Tom', ...)  # works
@@ -84,7 +88,9 @@ module Odd
 end
 
 class Person < ValueType
-  def_attr :age, Odd
+  def_attributes do
+    age Odd
+  end
 end
 
 Person.new(age: 9)  # works
@@ -101,41 +107,43 @@ Default attribute values also pass through validation.
 Coercion blocks can convert invalid values into valid ones, where possible.
 
 ```ruby
-class Person < ValueType
-  def_attr :birthday do |value|
-    case value
-    when Date then value
-    when String then Date.parse(value)
-    when Array then Date.new(*value)
-    else fail("#{value} is not a valid birthday")
+class Server < ValueType
+  def_attributes do
+    address IPAddr do |value|
+      if value.is_a?(String)
+        IPAddr.new(value)
+      else
+        value
+      end
     end
   end
 end
 
-Person.new(birthday: Date.today)    # works
-Person.new(birthday: '2018-08-19')  # works
-Person.new(birthday: [2018, 8, 19]) # works
-Person.new(birthday: 42)
+Server.new(address: '127.0.0.1')  # works
+Server.new(address: IPAddr.new('127.0.0.1'))  # works
+Server.new(address: 42)
 #=> ArgumentError:
-#=>     Value for attribute 'birthday' is not valid: 42
+#=>     Value for attribute 'address' is not valid: 42
 ```
 
-Coercion happens before validation.
-If coercion is not possible, one option is to return the value unchanged,
-allowing the validator to fail instead of raising an error within the block.
+If coercion is not possible, the value is to returned unchanged, allowing the validator to fail.
+Another option is to raise an error within the coercion block.
 
+Coercion happens before validation.
 Default attribute values also pass through coercion.
 
 ## All Together
 
 ```ruby
 class Coordinate < ValueType
-  def_attr(:latitude, Float, default: 0) { |value| value.to_f }
-  def_attr(:longitude, Float, default: 0) { |value| value.to_f }
+  def_attributes do
+    latitude Float, default: 0 { |value| value.to_f }
+    longitude Float, default: 0 { |value| value.to_f }
+  end
 end
 
 Coordinate.new(longitude: "123")
-#=> <Coordinate latitude=0.0 longitude=123.0>
+#=> #<Coordinate latitude=0.0 longitude=123.0>
 ```
 
 
