@@ -1,10 +1,14 @@
 class ValueType
-  def self.declare_attributes(&block)
+  @attributes = [].freeze
+
+  def self.def_attributes(&block)
+    fail "Attributes already defined for #{self}" if @attributes
+
     dsl = DSL.new
     dsl.instance_exec(&block)
     @attributes = (dsl.__attributes + superclass.attributes).freeze
 
-    attributes.each do |attr|
+    @attributes.each do |attr|
       class_eval <<~END_ATTR_READER
         def #{attr.name}
           #{attr.instance_variable}
@@ -13,7 +17,6 @@ class ValueType
     end
   end
 
-  @attributes = [].freeze
   def self.attributes
     @attributes || superclass.attributes
   end

@@ -3,7 +3,7 @@ require "spec_helper"
 RSpec.describe ValueType do
   context 'basic usage' do
     class Dog < ValueType
-      declare_attributes do
+      def_attributes do
         name
         trained?
       end
@@ -59,11 +59,19 @@ RSpec.describe ValueType do
       dog = Dog.new(name: 'Fido', trained?: true)
       expect(dog.inspect).to eq('#<Dog name="Fido" trained?=true>')
     end
+
+    it "disallows using def_attributes twice" do
+      expect {
+        class Dog
+          def_attributes { whatever }
+        end
+      }.to raise_error(/already defined/)
+    end
   end
 
   context 'default values' do
     class Cat < ValueType
-      declare_attributes do
+      def_attributes do
         name default: 'Kitty'
       end
     end
@@ -89,7 +97,7 @@ RSpec.describe ValueType do
     end
 
     class Birb < ValueType
-      declare_attributes do
+      def_attributes do
         wings WingValidator
       end
     end
@@ -105,7 +113,7 @@ RSpec.describe ValueType do
 
   context 'coercion' do
     class Person < ValueType
-      declare_attributes do
+      def_attributes do
         likes Array do |likes|
           if likes.is_a?(String)
             likes.split(',').map(&:strip)
@@ -170,7 +178,7 @@ RSpec.describe ValueType do
 
   context 'inheritance' do
     class Wolf < Dog
-      declare_attributes do
+      def_attributes do
         teeth
       end
     end
@@ -186,7 +194,7 @@ RSpec.describe ValueType do
 
   context 'complicated usage' do
     class RocketSurgery < ValueType
-      declare_attributes do
+      def_attributes do
         bang! default: 111
         qmark? default: 222
         widgets String, default: [4,5,6] do |widgets|
