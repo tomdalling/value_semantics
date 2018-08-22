@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tomdalling/value_semantics.svg?branch=master)](https://travis-ci.org/tomdalling/value_semantics)
+
 # ValueSemantics
 
 Create value classes quickly, with all the [conventions of a good value object](https://github.com/zverok/good-value-object).
