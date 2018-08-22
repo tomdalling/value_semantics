@@ -1,4 +1,4 @@
-# ValueType
+# ValueSemantics
 
 Immutable struct-like value classes, with light-weight validation and coercion.
 
@@ -9,13 +9,13 @@ not an error message intended for the user.
 ## Basic Usage
 
 ```ruby
-require 'value_type'
+require 'value_semantics'
 
-class Person < ValueType
-  def_attributes do
+class Person
+  include ValueSemantics.for_attributes {
     name
     age default: 31
-  end
+  }
 end
 
 tom = Person.new(name: 'Tom')
@@ -53,6 +53,10 @@ tom.eql?(other_tom)  #=> true
 tom.hash == other_tom.hash  #=> true
 ```
 
+The curly bracket syntax used with `ValueSemantics.for_attributes` is, unfortunately,
+mandatory due to Ruby's precedence rules.
+The `do`/`end` syntax will not work.
+
 
 ## Validation (Types)
 
@@ -60,11 +64,11 @@ Validators are objects that implement the `===` method,
 which means you can use `Class` objects (like `String`) and also `Regexp` objects:
 
 ```ruby
-class Person < ValueType
-  def_attributes do
+class Person
+  include ValueSemantics.for_attributes {
     name String
     birthday /\d\d\d\d-\d\d-\d\d/
-  end
+  }
 end
 
 Person.new(name: 'Tom', ...)  # works
@@ -87,10 +91,10 @@ module Odd
   end
 end
 
-class Person < ValueType
-  def_attributes do
+class Person
+  include ValueSemantics.for_attributes {
     age Odd
-  end
+  }
 end
 
 Person.new(age: 9)  # works
@@ -107,8 +111,8 @@ Default attribute values also pass through validation.
 Coercion blocks can convert invalid values into valid ones, where possible.
 
 ```ruby
-class Server < ValueType
-  def_attributes do
+class Server
+  include ValueSemantics.for_attributes {
     address IPAddr do |value|
       if value.is_a?(String)
         IPAddr.new(value)
@@ -116,7 +120,7 @@ class Server < ValueType
         value
       end
     end
-  end
+  }
 end
 
 Server.new(address: '127.0.0.1')  # works
@@ -135,11 +139,11 @@ Default attribute values also pass through coercion.
 ## All Together
 
 ```ruby
-class Coordinate < ValueType
-  def_attributes do
+class Coordinate
+  include ValueSemantics.for_attributes {
     latitude Float, default: 0 { |value| value.to_f }
     longitude Float, default: 0 { |value| value.to_f }
-  end
+  }
 end
 
 Coordinate.new(longitude: "123")
@@ -152,7 +156,7 @@ Coordinate.new(longitude: "123")
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'value_type'
+gem 'value_semantics'
 ```
 
 And then execute:
@@ -161,13 +165,13 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install value_type
+    $ gem install value_semantics
 
 
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at:
-https://github.com/tomdalling/value_type
+https://github.com/tomdalling/value_semantics
 
 
 ## License
