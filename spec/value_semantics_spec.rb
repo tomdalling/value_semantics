@@ -111,14 +111,20 @@ RSpec.describe ValueSemantics do
   context 'coercion' do
     class Person
       include ValueSemantics.for_attributes {
-        likes Array do |likes|
-          if likes.is_a?(String)
-            likes.split(',').map(&:strip)
-          else
-            likes
-          end
+        likes Array do |value|
+          coerce_likes(value)
         end
       }
+
+      private
+
+      def coerce_likes(likes)
+        if likes.is_a?(String)
+          likes.split(',').map(&:strip)
+        else
+          likes
+        end
+      end
     end
 
     it "calls the coercion block before validation" do

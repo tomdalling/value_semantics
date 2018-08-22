@@ -32,7 +32,7 @@ module ValueSemantics
       remaining_attrs = given_attrs.dup
 
       self.class.attributes.each do |attr|
-        key, value = attr.determine_from!(remaining_attrs)
+        key, value = attr.determine_from!(remaining_attrs, self)
         instance_variable_set(attr.instance_variable, value)
         remaining_attrs.delete(key)
       end
@@ -75,7 +75,7 @@ module ValueSemantics
   end
 
   class Attribute
-    attr_reader :name, :has_default, :default_value
+    attr_reader :name, :has_default, :default_value, :coercer
 
     def initialize(name:, has_default:, default_value:, validator:, coercer:)
       @name = name.to_sym
@@ -86,7 +86,7 @@ module ValueSemantics
       freeze
     end
 
-    def determine_from!(attr_hash)
+    def determine_from!(attr_hash, value_object)
       raw_value = attr_hash.fetch(name) do
         if has_default
           default_value
@@ -95,7 +95,7 @@ module ValueSemantics
         end
       end
 
-      coerced_value = coerce(raw_value)
+      coerced_value = value_object.instance_exec(raw_value, &coercer)
 
       if validate?(coerced_value)
         [name, coerced_value]
@@ -114,10 +114,6 @@ module ValueSemantics
 
     def validate?(value)
       !!(@validator === value)
-    end
-
-    def coerce(value)
-      @coercer.call(value)
     end
 
     def instance_variable
@@ -163,10 +159,6 @@ module ValueSemantics
     end
   end
 
-  module IdentityCoercer
-    def self.call(value)
-      value
-    end
-  end
+  IdentityCoercer = ->(value) { value }
 
 end

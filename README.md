@@ -141,6 +141,28 @@ Another option is to raise an error within the coercion block.
 Coercion happens before validation.
 Default attribute values also pass through coercion.
 
+The coercion block runs in the context of the value object,
+so you can call methods from the value object.
+For example:
+
+```
+class Server
+  include ValueSemantics.for_attributes {
+    address IPAddr do |value|
+      coerce_address(value)
+    end
+  }
+
+  def coerce_address(value)
+    if value.is_a?(String)
+      IPAddr.new(value)
+    else
+      value
+    end
+  end
+end
+```
+
 ## All Together
 
 ```ruby
