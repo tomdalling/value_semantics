@@ -1,12 +1,12 @@
 require "spec_helper"
 
-RSpec.describe ValueType do
+RSpec.describe ValueSemantics do
   context 'basic usage' do
-    class Dog < ValueType
-      def_attributes do
+    class Dog
+      include ValueSemantics.for_attributes {
         name
         trained?
-      end
+      }
     end
 
     it "has a keyword constructor and attr readers" do
@@ -59,21 +59,13 @@ RSpec.describe ValueType do
       dog = Dog.new(name: 'Fido', trained?: true)
       expect(dog.inspect).to eq('#<Dog name="Fido" trained?=true>')
     end
-
-    it "disallows using def_attributes twice" do
-      expect {
-        class Dog
-          def_attributes { whatever }
-        end
-      }.to raise_error(/already defined/)
-    end
   end
 
   context 'default values' do
-    class Cat < ValueType
-      def_attributes do
+    class Cat
+      include ValueSemantics.for_attributes {
         name default: 'Kitty'
-      end
+      }
     end
 
     it "uses the default if no value is given" do
@@ -96,10 +88,10 @@ RSpec.describe ValueType do
       end
     end
 
-    class Birb < ValueType
-      def_attributes do
+    class Birb
+      include ValueSemantics.for_attributes {
         wings WingValidator
-      end
+      }
     end
 
     it "accepts values that pass the validator" do
@@ -112,8 +104,8 @@ RSpec.describe ValueType do
   end
 
   context 'coercion' do
-    class Person < ValueType
-      def_attributes do
+    class Person
+      include ValueSemantics.for_attributes {
         likes Array do |likes|
           if likes.is_a?(String)
             likes.split(',').map(&:strip)
@@ -121,7 +113,7 @@ RSpec.describe ValueType do
             likes
           end
         end
-      end
+      }
     end
 
     it "calls the coercion block before validation" do
@@ -176,25 +168,9 @@ RSpec.describe ValueType do
     end
   end
 
-  context 'inheritance' do
-    class Wolf < Dog
-      def_attributes do
-        teeth
-      end
-    end
-
-    class EmptyWolf < Dog
-    end
-
-    it 'inherits attributes' do
-      expect { EmptyWolf.new(name: 'Fido', trained?: false) }.not_to raise_error
-      expect { Wolf.new(teeth: 1, name: 'Fido', trained?: false) }.not_to raise_error
-    end
-  end
-
   context 'complicated usage' do
-    class RocketSurgery < ValueType
-      def_attributes do
+    class RocketSurgery
+      include ValueSemantics.for_attributes {
         bang! default: 111
         qmark? default: 222
         widgets String, default: [4,5,6] do |widgets|
@@ -203,7 +179,7 @@ RSpec.describe ValueType do
           else widgets
           end
         end
-      end
+      }
     end
 
     it 'works' do
@@ -216,7 +192,7 @@ RSpec.describe ValueType do
   end
 
   it "has a version number" do
-    expect(ValueType::VERSION).not_to be nil
+    expect(ValueSemantics::VERSION).not_to be nil
   end
 end
 

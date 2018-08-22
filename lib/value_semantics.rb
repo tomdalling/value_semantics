@@ -1,39 +1,33 @@
-class ValueType
-  @attributes = [].freeze
+module ValueSemantics
+  def self.for_attributes(&block)
+    attributes = DSL.run(&block)
 
-  def self.def_attributes(&block)
-    fail "Attributes already defined for #{self}" if @attributes
-
-    dsl = DSL.new
-    dsl.instance_exec(&block)
-    @attributes = (dsl.__attributes + superclass.attributes).freeze
-
-    @attributes.each do |attr|
-      class_eval <<~END_ATTR_READER
-        def #{attr.name}
-          #{attr.instance_variable}
-        end
-      END_ATTR_READER
+    Module.new.tap do |m|
+      m.const_set(:ATTRIBUTES, attributes)
+      m.include(ValueSemantics)
+      attributes.each do |attr|
+        m.module_eval("def #{attr.name}; #{attr.instance_variable}; end")
+      end
     end
-  end
-
-  def self.attributes
-    @attributes || superclass.attributes
   end
 
   def initialize(given_attrs = {})
     remaining_attrs = given_attrs.dup
 
-    self.class.attributes.each do |attr|
+    attribute_definitions.each do |attr|
       key, value = attr.determine_from!(remaining_attrs)
       instance_variable_set(attr.instance_variable, value)
       remaining_attrs.delete(key)
     end
 
     unless remaining_attrs.empty?
-      extra_attrs = remaining_attrs.keys.map(&:inspect).join(', ')
-      raise ArgumentError, "Unrecognised attributes: #{extra_attrs}"
+      unrecognised = remaining_attrs.keys.map(&:inspect).join(', ')
+      raise ArgumentError, "Unrecognised attributes: #{unrecognised}"
     end
+  end
+
+  def attribute_definitions
+    self.class::ATTRIBUTES
   end
 
   def with(new_attrs)
@@ -41,7 +35,7 @@ class ValueType
   end
 
   def to_h
-    self.class.attributes
+    attribute_definitions
       .map { |attr| [attr.name, public_send(attr.name)] }
       .to_h
   end
@@ -66,8 +60,20 @@ class ValueType
     "#<#{self.class} #{attrs}>"
   end
 
-  private
+  module AnythingValidator
+    def self.===(value)
+      true
+    end
+  end
 
+  module IdentityCoercer
+    def self.call(value)
+      value
+    end
+  end
+end
+
+module ValueSemantics
   class Attribute
     attr_reader :name, :has_default, :default_value
 
@@ -81,21 +87,21 @@ class ValueType
     end
 
     def determine_from!(attr_hash)
-      value = begin
-        if attr_hash.key?(name)
-          coerce(attr_hash.fetch(name))
-        elsif has_default
-          coerce(default_value)
+      raw_value = attr_hash.fetch(name) do
+        if has_default
+          default_value
         else
           raise ArgumentError, "Value missing for attribute '#{name}'"
         end
       end
 
-      unless validate?(value)
-        raise ArgumentError, "Value for attribute '#{name}' is not valid: #{value.inspect}"
-      end
+      coerced_value = coerce(raw_value)
 
-      [name, value]
+      if validate?(coerced_value)
+        [name, coerced_value]
+      else
+        raise ArgumentError, "Value for attribute '#{name}' is not valid: #{coerced_value.inspect}"
+      end
     end
 
     def default_value
@@ -118,30 +124,27 @@ class ValueType
       '@' + name.to_s.chomp('!').chomp('?')
     end
   end
+end
 
-  module AnythingValidator
-    def self.===(value)
-      true
-    end
-  end
-
-  module IdentityCoercer
-    def self.call(value)
-      value
-    end
-  end
-
-  NOT_SPECIFIED = Object.new
-
+module ValueSemantics
   class DSL
+    NOT_SPECIFIED = Object.new
+
+    def self.run(&block)
+      dsl = new
+      dsl.instance_eval(&block)
+      dsl.__attributes
+    end
+
     attr_reader :__attributes
 
     def initialize
       @__attributes = []
     end
 
-    def method_missing(attr_name, validator = AnythingValidator, default: NOT_SPECIFIED, &coercion_block)
-      #TODO: check for duplicate attrs
+    def method_missing(attr_name, validator=AnythingValidator,
+      default: NOT_SPECIFIED, &coercion_block)
+
       __attributes << Attribute.new(
         name: attr_name,
         has_default: default != NOT_SPECIFIED,
@@ -151,7 +154,7 @@ class ValueType
       )
     end
 
-    def respond_to_missing?(*)
+    def respond_to_missing?(method_name, include_private = false)
       true
     end
   end

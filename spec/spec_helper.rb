@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "value_type"
+require "value_semantics"
 require "byebug"
 
 RSpec.configure do |config|
