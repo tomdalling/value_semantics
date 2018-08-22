@@ -59,6 +59,11 @@ RSpec.describe ValueSemantics do
       dog = Dog.new(name: 'Fido', trained?: true)
       expect(dog.inspect).to eq('#<Dog name="Fido" trained?=true>')
     end
+
+    it "has a human-friendly module name" do
+      mod = Dog.ancestors[1]
+      expect(mod.inspect).to include("ValueSemantics_Generated")
+    end
   end
 
   context 'default values' do

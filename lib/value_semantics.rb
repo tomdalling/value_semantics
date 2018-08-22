@@ -14,6 +14,7 @@ module ValueSemantics
       # define BaseClass.attributes class method
       m.const_set(:ATTRIBUTES__, attributes)
       m.define_singleton_method(:included) do |base|
+        base.const_set(:ValueSemantics_Generated, m)
         class << base
           def attributes
             self::ATTRIBUTES__
