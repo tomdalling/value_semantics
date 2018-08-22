@@ -1,6 +1,11 @@
 # ValueSemantics
 
-Immutable struct-like value classes, with light-weight validation and coercion.
+Create value classes quickly, with all the [conventions of a good value object]
+(https://github.com/zverok/good-value-object).
+
+Generates modules that provide value semantics for a given set of attributes.
+Provides the behaviour of an immutable struct-like value class,
+with light-weight validation and coercion.
 
 These are intended for internal use, as opposed to validating user input like ActiveRecord.
 Invalid or missing attributes cause an exception intended for developers,
@@ -55,7 +60,7 @@ tom.hash == other_tom.hash  #=> true
 
 The curly bracket syntax used with `ValueSemantics.for_attributes` is, unfortunately,
 mandatory due to Ruby's precedence rules.
-The `do`/`end` syntax will not work.
+The `do`/`end` syntax will not work unless you surround the whole thing with parenthesis.
 
 
 ## Validation (Types)

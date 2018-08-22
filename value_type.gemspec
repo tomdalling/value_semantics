@@ -9,8 +9,14 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Tom Dalling"]
   spec.email         = [["tom", "@", "tomdalling.com"].join]
 
-  spec.summary       = %q{Immutable struct-like value classes, with light-weight validation and coercion.}
-  spec.description   = %q{Immutable struct-like value classes, with light-weight validation and coercion.}
+  spec.summary       = %q{Create value classes quickly, with all the proper conventions.}
+  spec.description   = %q{
+    Create value classes quickly, with all the proper conventions.
+
+    Generates modules that provide value semantics for a given set of attributes.
+    Provides the behaviour of an immutable struct-like value class,
+    with light-weight validation and coercion.
+  }
   spec.homepage      = "https://github.com/tomdalling/value_semantics"
   spec.license       = "MIT"
 
