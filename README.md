@@ -1,7 +1,6 @@
 # ValueSemantics
 
-Create value classes quickly, with all the [conventions of a good value object]
-(https://github.com/zverok/good-value-object).
+Create value classes quickly, with all the [conventions of a good value object](https://github.com/zverok/good-value-object).
 
 Generates modules that provide value semantics for a given set of attributes.
 Provides the behaviour of an immutable struct-like value class,
