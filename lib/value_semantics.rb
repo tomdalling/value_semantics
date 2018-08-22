@@ -1,7 +1,10 @@
 module ValueSemantics
   def self.for_attributes(&block)
     attributes = DSL.run(&block)
+    generate_module(attributes)
+  end
 
+  def self.generate_module(attributes)
     Module.new.tap do |m|
       # include all the instance methods
       m.include(Semantics)
@@ -24,20 +27,6 @@ module ValueSemantics
     end
   end
 
-  module AnythingValidator
-    def self.===(value)
-      true
-    end
-  end
-
-  module IdentityCoercer
-    def self.call(value)
-      value
-    end
-  end
-end
-
-module ValueSemantics
   module Semantics
     def initialize(given_attrs = {})
       remaining_attrs = given_attrs.dup
@@ -84,9 +73,7 @@ module ValueSemantics
       "#<#{self.class} #{attrs}>"
     end
   end
-end
 
-module ValueSemantics
   class Attribute
     attr_reader :name, :has_default, :default_value
 
@@ -137,9 +124,7 @@ module ValueSemantics
       '@' + name.to_s.chomp('!').chomp('?')
     end
   end
-end
 
-module ValueSemantics
   class DSL
     NOT_SPECIFIED = Object.new
 
@@ -171,4 +156,17 @@ module ValueSemantics
       true
     end
   end
+
+  module AnythingValidator
+    def self.===(value)
+      true
+    end
+  end
+
+  module IdentityCoercer
+    def self.call(value)
+      value
+    end
+  end
+
 end
