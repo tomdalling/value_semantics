@@ -3,61 +3,24 @@ module ValueSemantics
     attributes = DSL.run(&block)
 
     Module.new.tap do |m|
-      m.const_set(:ATTRIBUTES, attributes)
-      m.include(ValueSemantics)
+      # include all the instance methods
+      m.include(Semantics)
+
+      # define the attr readers
       attributes.each do |attr|
         m.module_eval("def #{attr.name}; #{attr.instance_variable}; end")
       end
+
+      # define BaseClass.attributes class method
+      m.const_set(:ATTRIBUTES__, attributes)
+      m.define_singleton_method(:included) do |base|
+        class << base
+          def attributes
+            self::ATTRIBUTES__
+          end
+        end
+      end
     end
-  end
-
-  def initialize(given_attrs = {})
-    remaining_attrs = given_attrs.dup
-
-    attribute_definitions.each do |attr|
-      key, value = attr.determine_from!(remaining_attrs)
-      instance_variable_set(attr.instance_variable, value)
-      remaining_attrs.delete(key)
-    end
-
-    unless remaining_attrs.empty?
-      unrecognised = remaining_attrs.keys.map(&:inspect).join(', ')
-      raise ArgumentError, "Unrecognised attributes: #{unrecognised}"
-    end
-  end
-
-  def attribute_definitions
-    self.class::ATTRIBUTES
-  end
-
-  def with(new_attrs)
-    self.class.new(to_h.merge(new_attrs))
-  end
-
-  def to_h
-    attribute_definitions
-      .map { |attr| [attr.name, public_send(attr.name)] }
-      .to_h
-  end
-
-  def ==(other)
-    (other.is_a?(self.class) || is_a?(other.class)) && other.to_h == to_h
-  end
-
-  def eql?(other)
-    other.class.equal?(self.class) && other.to_h.eql?(to_h)
-  end
-
-  def hash
-    @__hash ||= (to_h.hash ^ self.class.hash)
-  end
-
-  def inspect
-    attrs = to_h
-      .map { |key, value| "#{key}=#{value.inspect}" }
-      .join(" ")
-
-    "#<#{self.class} #{attrs}>"
   end
 
   module AnythingValidator
@@ -69,6 +32,55 @@ module ValueSemantics
   module IdentityCoercer
     def self.call(value)
       value
+    end
+  end
+end
+
+module ValueSemantics
+  module Semantics
+    def initialize(given_attrs = {})
+      remaining_attrs = given_attrs.dup
+
+      self.class.attributes.each do |attr|
+        key, value = attr.determine_from!(remaining_attrs)
+        instance_variable_set(attr.instance_variable, value)
+        remaining_attrs.delete(key)
+      end
+
+      unless remaining_attrs.empty?
+        unrecognised = remaining_attrs.keys.map(&:inspect).join(', ')
+        raise ArgumentError, "Unrecognised attributes: #{unrecognised}"
+      end
+    end
+
+    def with(new_attrs)
+      self.class.new(to_h.merge(new_attrs))
+    end
+
+    def to_h
+      self.class.attributes
+        .map { |attr| [attr.name, public_send(attr.name)] }
+        .to_h
+    end
+
+    def ==(other)
+      (other.is_a?(self.class) || is_a?(other.class)) && other.to_h == to_h
+    end
+
+    def eql?(other)
+      other.class.equal?(self.class) && other.to_h.eql?(to_h)
+    end
+
+    def hash
+      @__hash ||= (to_h.hash ^ self.class.hash)
+    end
+
+    def inspect
+      attrs = to_h
+        .map { |key, value| "#{key}=#{value.inspect}" }
+        .join(" ")
+
+      "#<#{self.class} #{attrs}>"
     end
   end
 end
