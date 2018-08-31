@@ -182,27 +182,41 @@ RSpec.describe ValueSemantics do
   context 'complicated usage' do
     class RocketSurgery
       include ValueSemantics.for_attributes {
-        bang! default: 111
+        bang! maybe(Integer)
         qmark? default: 222
-        widgets String, default: [4,5,6] do |widgets|
-          case widgets
-          when Array then widgets.join('|')
-          else widgets
-          end
-        end
+        bool boolean
+        moo anything, default: {}
+        woof either(String, Integer)
+        widgets String, default: [4,5,6] { |value| coerce_widgets(value) }
       }
+
+      def coerce_widgets(widgets)
+        case widgets
+        when Array then widgets.join('|')
+        else widgets
+        end
+      end
     end
 
     it 'works' do
-      expect(RocketSurgery.new).to have_attributes(
-        bang!: 111,
+      rs = RocketSurgery.new(
+        bang!: nil,
+        bool: true,
+        woof: 55,
+      )
+
+      expect(rs).to have_attributes(
+        bang!: nil,
         qmark?: 222,
+        bool: true,
         widgets: '4|5|6',
+        moo: {},
+        woof: 55,
       )
     end
   end
 
-  describe ValueSemantics::Bool do
+  describe ValueSemantics::Boolean do
     it 'matches true and false' do
       is_expected.to be === true
       is_expected.to be === false
@@ -211,6 +225,33 @@ RSpec.describe ValueSemantics do
     it 'does not match nil or other values' do
       is_expected.not_to be === nil
       is_expected.not_to be === 5
+    end
+  end
+
+  describe ValueSemantics::Maybe do
+    subject { described_class.new(Integer) }
+
+    it 'matches nil or the subvalidator' do
+      is_expected.to be === nil
+      is_expected.to be === 5
+    end
+
+    it 'does not match other values' do
+      is_expected.not_to be === 'hello'
+    end
+  end
+
+  describe ValueSemantics::Either do
+    subject { described_class.new([Integer, String]) }
+
+    it 'matches any of the subvalidators' do
+      is_expected.to be === 5
+      is_expected.to be === 'hello'
+    end
+
+    it 'does not match anything else' do
+      is_expected.not_to be === nil
+      is_expected.not_to be === [1,2,3]
     end
   end
 

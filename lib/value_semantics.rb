@@ -136,7 +136,23 @@ module ValueSemantics
       @__attributes = []
     end
 
-    def method_missing(attr_name, validator=AnythingValidator,
+    def maybe(subvalidator)
+      Maybe.new(subvalidator)
+    end
+
+    def boolean
+      Boolean
+    end
+
+    def either(*subvalidators)
+      Either.new(subvalidators)
+    end
+
+    def anything
+      Anything
+    end
+
+    def declare_attribute(attr_name, validator=Anything,
       default: NOT_SPECIFIED, &coercion_block)
 
       __attributes << Attribute.new(
@@ -148,12 +164,16 @@ module ValueSemantics
       )
     end
 
+    def method_missing(*args, &block)
+      declare_attribute(*args, &block)
+    end
+
     def respond_to_missing?(method_name, include_private = false)
       true
     end
   end
 
-  module Bool
+  module Boolean
     extend self
 
     def ===(value)
@@ -161,9 +181,33 @@ module ValueSemantics
     end
   end
 
-  module AnythingValidator
+  module Anything
     def self.===(value)
       true
+    end
+  end
+
+  class Maybe
+    attr_reader :subvalidator
+
+    def initialize(subvalidator)
+      @subvalidator = subvalidator
+    end
+
+    def ===(value)
+      nil == value || subvalidator === value
+    end
+  end
+
+  class Either
+    attr_reader :subvalidators
+
+    def initialize(subvalidators)
+      @subvalidators = subvalidators
+    end
+
+    def ===(value)
+      subvalidators.any? { |sv| sv === value }
     end
   end
 
