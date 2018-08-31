@@ -153,6 +153,14 @@ module ValueSemantics
     end
   end
 
+  module Bool
+    extend self
+
+    def ===(value)
+      true.eql?(value) || false.eql?(value)
+    end
+  end
+
   module AnythingValidator
     def self.===(value)
       true

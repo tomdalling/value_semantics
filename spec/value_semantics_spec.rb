@@ -202,6 +202,18 @@ RSpec.describe ValueSemantics do
     end
   end
 
+  describe ValueSemantics::Bool do
+    it 'matches true and false' do
+      is_expected.to be === true
+      is_expected.to be === false
+    end
+
+    it 'does not match nil or other values' do
+      is_expected.not_to be === nil
+      is_expected.not_to be === 5
+    end
+  end
+
   it "has a version number" do
     expect(ValueSemantics::VERSION).not_to be nil
   end
