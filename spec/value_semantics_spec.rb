@@ -187,7 +187,7 @@ RSpec.describe ValueSemantics do
         bool boolean
         moo anything, default: {}
         woof either(String, Integer)
-        widgets String, default: [4,5,6] { |value| coerce_widgets(value) }
+        widgets(String, default: [4,5,6]) { |value| coerce_widgets(value) }
       }
 
       def coerce_widgets(widgets)
