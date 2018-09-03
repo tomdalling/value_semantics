@@ -136,10 +136,6 @@ module ValueSemantics
       @__attributes = []
     end
 
-    def maybe(subvalidator)
-      Maybe.new(subvalidator)
-    end
-
     def boolean
       Boolean
     end
@@ -184,18 +180,6 @@ module ValueSemantics
   module Anything
     def self.===(value)
       true
-    end
-  end
-
-  class Maybe
-    attr_reader :subvalidator
-
-    def initialize(subvalidator)
-      @subvalidator = subvalidator
-    end
-
-    def ===(value)
-      nil == value || subvalidator === value
     end
   end
 

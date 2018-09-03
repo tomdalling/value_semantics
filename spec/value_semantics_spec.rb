@@ -182,11 +182,10 @@ RSpec.describe ValueSemantics do
   context 'complicated usage' do
     class RocketSurgery
       include ValueSemantics.for_attributes {
-        bang! maybe(Integer)
         qmark? default: 222
         bool boolean
         moo anything, default: {}
-        woof either(String, Integer)
+        woof! either(String, Integer)
         widgets(String, default: [4,5,6]) { |value| coerce_widgets(value) }
       }
 
@@ -200,18 +199,16 @@ RSpec.describe ValueSemantics do
 
     it 'works' do
       rs = RocketSurgery.new(
-        bang!: nil,
         bool: true,
-        woof: 55,
+        woof!: 55,
       )
 
       expect(rs).to have_attributes(
-        bang!: nil,
         qmark?: 222,
         bool: true,
         widgets: '4|5|6',
         moo: {},
-        woof: 55,
+        woof!: 55,
       )
     end
   end
@@ -225,19 +222,6 @@ RSpec.describe ValueSemantics do
     it 'does not match nil or other values' do
       is_expected.not_to be === nil
       is_expected.not_to be === 5
-    end
-  end
-
-  describe ValueSemantics::Maybe do
-    subject { described_class.new(Integer) }
-
-    it 'matches nil or the subvalidator' do
-      is_expected.to be === nil
-      is_expected.to be === 5
-    end
-
-    it 'does not match other values' do
-      is_expected.not_to be === 'hello'
     end
   end
 
