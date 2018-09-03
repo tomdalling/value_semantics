@@ -111,14 +111,12 @@ RSpec.describe ValueSemantics do
   context 'coercion' do
     class Person
       include ValueSemantics.for_attributes {
-        likes Array do |value|
-          coerce_likes(value)
-        end
+        likes Array
       }
 
       private
 
-      def coerce_likes(likes)
+      def self.coerce_likes(likes)
         if likes.is_a?(String)
           likes.split(',').map(&:strip)
         else
@@ -186,10 +184,10 @@ RSpec.describe ValueSemantics do
         bool boolean
         moo anything, default: {}
         woof! either(String, Integer)
-        widgets(String, default: [4,5,6]) { |value| coerce_widgets(value) }
+        widgets String, default: [4,5,6]
       }
 
-      def coerce_widgets(widgets)
+      def self.coerce_widgets(widgets)
         case widgets
         when Array then widgets.join('|')
         else widgets

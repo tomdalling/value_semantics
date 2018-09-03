@@ -32,7 +32,7 @@ module ValueSemantics
       remaining_attrs = given_attrs.dup
 
       self.class.attributes.each do |attr|
-        key, value = attr.determine_from!(remaining_attrs, self)
+        key, value = attr.determine_from!(remaining_attrs, self.class)
         instance_variable_set(attr.instance_variable, value)
         remaining_attrs.delete(key)
       end
@@ -75,18 +75,17 @@ module ValueSemantics
   end
 
   class Attribute
-    attr_reader :name, :has_default, :default_value, :coercer
+    attr_reader :name, :has_default, :default_value
 
-    def initialize(name:, has_default:, default_value:, validator:, coercer:)
+    def initialize(name:, has_default:, default_value:, validator:)
       @name = name.to_sym
       @has_default = has_default
       @default_value = default_value
       @validator = validator
-      @coercer = coercer
       freeze
     end
 
-    def determine_from!(attr_hash, value_object)
+    def determine_from!(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
         if has_default
           default_value
@@ -95,12 +94,20 @@ module ValueSemantics
         end
       end
 
-      coerced_value = value_object.instance_exec(raw_value, &coercer)
+      coerced_value = coerce(raw_value, klass)
 
       if validate?(coerced_value)
         [name, coerced_value]
       else
         raise ArgumentError, "Value for attribute '#{name}' is not valid: #{coerced_value.inspect}"
+      end
+    end
+
+    def coerce(attr_value, klass)
+      if klass.respond_to?(coercion_method)
+        klass.public_send(coercion_method, attr_value)
+      else
+        attr_value
       end
     end
 
@@ -118,6 +125,10 @@ module ValueSemantics
 
     def instance_variable
       '@' + name.to_s.chomp('!').chomp('?')
+    end
+
+    def coercion_method
+      "coerce_#{name}"
     end
   end
 
@@ -148,15 +159,13 @@ module ValueSemantics
       Anything
     end
 
-    def declare_attribute(attr_name, validator=Anything,
-      default: NOT_SPECIFIED, &coercion_block)
+    def declare_attribute(attr_name, validator=Anything, default: NOT_SPECIFIED)
 
       __attributes << Attribute.new(
         name: attr_name,
         has_default: default != NOT_SPECIFIED,
         default_value: default,
         validator: validator,
-        coercer: coercion_block || IdentityCoercer,
       )
     end
 
@@ -194,7 +203,5 @@ module ValueSemantics
       subvalidators.any? { |sv| sv === value }
     end
   end
-
-  IdentityCoercer = ->(value) { value }
 
 end
