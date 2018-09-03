@@ -177,7 +177,7 @@ RSpec.describe ValueSemantics do
     end
   end
 
-  context 'complicated usage' do
+  context 'complicated DSL usage' do
     class RocketSurgery
       include ValueSemantics.for_attributes {
         qmark? default: 222
@@ -185,6 +185,7 @@ RSpec.describe ValueSemantics do
         moo anything, default: {}
         woof! either(String, Integer)
         widgets String, default: [4,5,6]
+        array_test array_of(Integer)
       }
 
       def self.coerce_widgets(widgets)
@@ -199,6 +200,7 @@ RSpec.describe ValueSemantics do
       rs = RocketSurgery.new(
         bool: true,
         woof!: 55,
+        array_test: [1,2,3],
       )
 
       expect(rs).to have_attributes(
@@ -207,6 +209,7 @@ RSpec.describe ValueSemantics do
         widgets: '4|5|6',
         moo: {},
         woof!: 55,
+        array_test: [1,2,3],
       )
     end
   end
@@ -234,6 +237,20 @@ RSpec.describe ValueSemantics do
     it 'does not match anything else' do
       is_expected.not_to be === nil
       is_expected.not_to be === [1,2,3]
+    end
+  end
+
+  describe ValueSemantics::ArrayOf do
+    subject { described_class.new(Integer) }
+
+    it 'uses the subvalidator for each element in the array' do
+      is_expected.to be === [1,2,3]
+      is_expected.to be === []
+    end
+
+    it 'does not match anything else' do
+      is_expected.not_to be === nil
+      is_expected.not_to be === 'hello'
     end
   end
 

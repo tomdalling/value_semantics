@@ -159,6 +159,10 @@ module ValueSemantics
       Anything
     end
 
+    def array_of(element_validator)
+      ArrayOf.new(element_validator)
+    end
+
     def declare_attribute(attr_name, validator=Anything, default: NOT_SPECIFIED)
 
       __attributes << Attribute.new(
@@ -197,10 +201,24 @@ module ValueSemantics
 
     def initialize(subvalidators)
       @subvalidators = subvalidators
+      freeze
     end
 
     def ===(value)
       subvalidators.any? { |sv| sv === value }
+    end
+  end
+
+  class ArrayOf
+    attr_reader :element_validator
+
+    def initialize(element_validator)
+      @element_validator = element_validator
+      freeze
+    end
+
+    def ===(value)
+      Array === value && value.all? { |element| element_validator === element }
     end
   end
 
