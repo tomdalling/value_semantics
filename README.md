@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/tomdalling/value_semantics.svg?branch=master)](https://travis-ci.org/tomdalling/value_semantics)
 
-# ValueSemantics
+ValueSemantics
+==============
 
 Create value classes quickly, with all the [conventions of a good value object](https://github.com/zverok/good-value-object).
 
@@ -12,7 +13,9 @@ These are intended for internal use, as opposed to validating user input like Ac
 Invalid or missing attributes cause an exception intended for developers,
 not an error message intended for the user.
 
-## Basic Usage
+
+Basic Usage
+-----------
 
 ```ruby
 require 'value_semantics'
@@ -64,10 +67,15 @@ mandatory due to Ruby's precedence rules.
 The `do`/`end` syntax will not work unless you surround the whole thing with parenthesis.
 
 
-## Validation (Types)
+Validation (Types)
+------------------
+
+Each attribute may optionally have a validator, to check that values are correct.
 
 Validators are objects that implement the `===` method,
-which means you can use `Class` objects (like `String`) and also `Regexp` objects:
+which means you can use `Class` objects (like `String`),
+and also things like regular expressions.
+Anything that you can use in a `case`/`when` expression will work.
 
 ```ruby
 class Person
@@ -87,6 +95,34 @@ Person.new(birthday: "hello", ...)
 #=> ArgumentError:
 #=>     Value for attribute 'birthday' is not valid: "hello"
 ```
+
+
+### Built-in Validators
+
+The ValueSemantics DSL comes with a small number of built-in validators,
+for common situations:
+
+```ruby
+class LightSwitch
+  include ValueSemantics.for_attributes {
+
+    # Boolean: only allows `true` or `false`
+    on? Boolean()
+
+    # array_of: validates elements in an array
+    connected_lights ArrayOf(Light)
+
+    # either: value must match at least one of a list of validators
+    color Either(Color, String, nil)
+
+    # these validators are composable
+    wierd_attr Either(Boolean, ArrayOf(Boolean))
+  }
+end
+```
+
+
+### Custom Validators
 
 A custom validator might look something like this:
 
@@ -112,21 +148,31 @@ Person.new(age: 8)
 Default attribute values also pass through validation.
 
 
-## Coercion
+Coercion
+--------
 
-Coercion blocks can convert invalid values into valid ones, where possible.
+Coercion allows non-standard or "convenience" values to be converted into
+proper, valid values, where possible.
+
+For example, an object with an `IPAddr` attribute may allow string values,
+which are then coerced into `IPAddr` objects.
+
+To implement coercion, define a class method called `coerce_#{attr}` which
+accepts a raw value, and returns the coerced value.
 
 ```ruby
 class Server
   include ValueSemantics.for_attributes {
-    address IPAddr do |value|
-      if value.is_a?(String)
-        IPAddr.new(value)
-      else
-        value
-      end
-    end
+    address IPAddr
   }
+
+  def self.coerce_address(value)
+    if value.is_a?(String)
+      IPAddr.new(value)
+    else
+      value
+    end
+  end
 end
 
 Server.new(address: '127.0.0.1')  # works
@@ -136,46 +182,40 @@ Server.new(address: 42)
 #=>     Value for attribute 'address' is not valid: 42
 ```
 
-If coercion is not possible, the value is to returned unchanged, allowing the validator to fail.
-Another option is to raise an error within the coercion block.
+If coercion is not possible, the value is to returned unchanged,
+allowing the validator to fail.
+Another option is to raise an error within the coercion method.
 
 Coercion happens before validation.
 Default attribute values also pass through coercion.
 
-The coercion block runs in the context of the value object,
-so you can call methods from the value object.
-For example:
 
-```
-class Server
+## All Together
+
+```ruby
+class Person
   include ValueSemantics.for_attributes {
-    address IPAddr do |value|
-      coerce_address(value)
-    end
+    name String, default: "Anon Emous"
+    birthday either(Date, nil)
   }
 
-  def coerce_address(value)
+  def self.coerce_birthday(value)
     if value.is_a?(String)
-      IPAddr.new(value)
+      Date.parse(value)
     else
       value
     end
   end
 end
-```
 
-## All Together
+Person.new(name: "Tom", birthday: "2020-12-25")
+#=> #<Person name="Tom" birthday=#<Date: 2020-12-25 ((2459209j,0s,0n),+0s,2299161j)>>
 
-```ruby
-class Coordinate
-  include ValueSemantics.for_attributes {
-    latitude Float, default: 0 { |value| value.to_f }
-    longitude Float, default: 0 { |value| value.to_f }
-  }
-end
+Person.new(birthday: Date.today)
+#=> #<Person name="Anon Emous" birthday=#<Date: 2018-09-04 ((2458366j,0s,0n),+0s,2299161j)>>
 
-Coordinate.new(longitude: "123")
-#=> #<Coordinate latitude=0.0 longitude=123.0>
+Person.new(birthday: nil)
+#=> #<Person name="Anon Emous" birthday=nil>
 ```
 
 
