@@ -109,10 +109,10 @@ class LightSwitch
     # Boolean: only allows `true` or `false`
     on? Boolean()
 
-    # array_of: validates elements in an array
+    # ArrayOf: validates elements in an array
     light_ids ArrayOf(Integer)
 
-    # either: value must match at least one of a list of validators
+    # Either: value must match at least one of a list of validators
     color Either(Integer, String, nil)
 
     # these validators are composable
