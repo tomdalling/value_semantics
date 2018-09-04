@@ -110,15 +110,22 @@ class LightSwitch
     on? Boolean()
 
     # array_of: validates elements in an array
-    connected_lights ArrayOf(Light)
+    light_ids ArrayOf(Integer)
 
     # either: value must match at least one of a list of validators
-    color Either(Color, String, nil)
+    color Either(Integer, String, nil)
 
     # these validators are composable
-    wierd_attr Either(Boolean, ArrayOf(Boolean))
+    wierd_attr Either(Boolean(), ArrayOf(Boolean()))
   }
 end
+
+LightSwitch.new(
+  on?: true,
+  light_ids: [11, 12, 13],
+  color: "#FFAABB",
+  wierd_attr: [true, false, true, true],
+)
 ```
 
 
@@ -175,14 +182,18 @@ class Server
   end
 end
 
-Server.new(address: '127.0.0.1')  # works
-Server.new(address: IPAddr.new('127.0.0.1'))  # works
+Server.new(address: '127.0.0.1')
+#=> #<Server address=#<IPAddr: IPv4:127.0.0.1/255.255.255.255>>
+
+Server.new(address: IPAddr.new('127.0.0.1'))
+#=> #<Server address=#<IPAddr: IPv4:127.0.0.1/255.255.255.255>>
+
 Server.new(address: 42)
 #=> ArgumentError:
 #=>     Value for attribute 'address' is not valid: 42
 ```
 
-If coercion is not possible, the value is to returned unchanged,
+If coercion is not possible, you can return the value unchanged,
 allowing the validator to fail.
 Another option is to raise an error within the coercion method.
 
@@ -196,7 +207,7 @@ Default attribute values also pass through coercion.
 class Person
   include ValueSemantics.for_attributes {
     name String, default: "Anon Emous"
-    birthday either(Date, nil)
+    birthday Either(Date, nil)
   }
 
   def self.coerce_birthday(value)
