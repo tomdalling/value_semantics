@@ -181,11 +181,11 @@ RSpec.describe ValueSemantics do
     class RocketSurgery
       include ValueSemantics.for_attributes {
         qmark? default: 222
-        bool boolean
-        moo anything, default: {}
-        woof! either(String, Integer)
+        bool Boolean()
+        moo Anything(), default: {}
+        woof! Either(String, Integer)
         widgets String, default: [4,5,6]
-        array_test array_of(Integer)
+        array_test ArrayOf(Integer)
       }
 
       def self.coerce_widgets(widgets)

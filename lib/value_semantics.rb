@@ -147,24 +147,23 @@ module ValueSemantics
       @__attributes = []
     end
 
-    def boolean
+    def Boolean
       Boolean
     end
 
-    def either(*subvalidators)
+    def Either(*subvalidators)
       Either.new(subvalidators)
     end
 
-    def anything
+    def Anything
       Anything
     end
 
-    def array_of(element_validator)
+    def ArrayOf(element_validator)
       ArrayOf.new(element_validator)
     end
 
     def declare_attribute(attr_name, validator=Anything, default: NOT_SPECIFIED)
-
       __attributes << Attribute.new(
         name: attr_name,
         has_default: default != NOT_SPECIFIED,
