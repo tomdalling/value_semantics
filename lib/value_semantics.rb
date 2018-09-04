@@ -172,12 +172,17 @@ module ValueSemantics
       )
     end
 
-    def method_missing(*args, &block)
-      declare_attribute(*args, &block)
+    def method_missing(name, *args, &block)
+      if respond_to_missing?(name)
+        declare_attribute(name, *args, &block)
+      else
+        super
+      end
     end
 
     def respond_to_missing?(method_name, include_private = false)
-      true
+      first_letter = method_name.to_s[0]
+      (first_letter == first_letter.downcase) || super
     end
   end
 
