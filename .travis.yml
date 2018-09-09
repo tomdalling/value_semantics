@@ -3,7 +3,7 @@ rvm:
   - 2.3.7
   - 2.4.4
   - 2.5.1
-script: bundle exec rspec
+script: bin/mutation_test.sh
 deploy:
   provider: rubygems
   on:
