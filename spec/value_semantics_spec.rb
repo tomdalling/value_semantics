@@ -1,16 +1,22 @@
 require "spec_helper"
 
 RSpec.describe ValueSemantics do
-  context 'basic usage' do
-    class Dog
+  let(:dog_class) do
+    Class.new do
       include ValueSemantics.for_attributes {
         name
         trained?
       }
     end
+  end
 
+  before do
+    Dog = dog_class unless defined? Dog
+  end
+
+  context 'basic usage' do
     it "has a keyword constructor and attr readers" do
-      dog = Dog.new(name: 'Fido', trained?: true)
+      dog = dog_class.new(name: 'Fido', trained?: true)
 
       expect(dog).to have_attributes(
         name: 'Fido',
@@ -20,11 +26,11 @@ RSpec.describe ValueSemantics do
 
     it "does not mutate constructor params" do
       params = { name: 'Fido', trained?: true }
-      expect { Dog.new(params) }.not_to change { params }
+      expect { dog_class.new(params) }.not_to change { params }
     end
 
     it "does not define attr writers" do
-      dog = Dog.new(name: 'Fido', trained?: true)
+      dog = dog_class.new(name: 'Fido', trained?: true)
 
       expect{ dog.name = 'Goofy' }.to raise_error(NoMethodError, /name=/)
       expect{ dog.trained = false }.to raise_error(NoMethodError, /trained=/)
@@ -32,25 +38,25 @@ RSpec.describe ValueSemantics do
 
     it "can not be constructed with attributes missing" do
       expect {
-        dog = Dog.new(name: 'Fido')
-      }.to raise_error(ArgumentError, /trained/)
+        dog = dog_class.new(name: 'Fido')
+      }.to raise_error(ArgumentError, "Value missing for attribute 'trained?'")
     end
 
     it "can not be constructed with undefined attributes" do
       expect {
-        Dog.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
+        dog_class.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
       }.to raise_error(ArgumentError, "Unrecognised attributes: :meow, :moo")
     end
 
     it "can do non-destructive updates" do
-      sally = Dog.new(name: 'Sally', trained?: false)
+      sally = dog_class.new(name: 'Sally', trained?: false)
       bob = sally.with(name: 'Bob')
 
       expect(bob).to have_attributes(name: 'Bob', trained?: false)
     end
 
     it "can be converted to a hash of attributes" do
-      dog = Dog.new(name: 'Fido', trained?: false)
+      dog = dog_class.new(name: 'Fido', trained?: false)
 
       expect(dog.to_h).to eq({ name: 'Fido', trained?: false })
     end
@@ -62,7 +68,12 @@ RSpec.describe ValueSemantics do
 
     it "has a human-friendly module name" do
       mod = Dog.ancestors[1]
-      expect(mod.inspect).to include("ValueSemantics_Generated")
+      expect(mod.name).to eq("Dog::ValueSemantics_Generated")
+    end
+
+    it 'has a list of frozen attributes' do
+      expect(dog_class.attributes).to be_frozen
+      expect(dog_class.attributes.first).to be_frozen
     end
   end
 
@@ -104,7 +115,8 @@ RSpec.describe ValueSemantics do
     end
 
     it "rejects values that fail the validator" do
-      expect{ Birb.new(wings: 'smooth feet') }.to raise_error(ArgumentError, /wings/)
+      expect{ Birb.new(wings: 'smooth feet') }.to raise_error(ArgumentError,
+        "Value for attribute 'wings' is not valid: \"smooth feet\"")
     end
   end
 
@@ -139,13 +151,12 @@ RSpec.describe ValueSemantics do
   end
 
   context "equality" do
-    class DogChild < Dog
-    end
+    let(:puppy_class) { Class.new(dog_class) }
 
-    let(:dog1) { Dog.new(name: 'Fido', trained?: true) }
-    let(:dog2) { Dog.new(name: 'Fido', trained?: true) }
-    let(:different) { Dog.new(name: 'Brutus', trained?: false) }
-    let(:child) { DogChild.new(name: 'Fido', trained?: true) }
+    let(:dog1) { dog_class.new(name: 'Fido', trained?: true) }
+    let(:dog2) { dog_class.new(name: 'Fido', trained?: true) }
+    let(:different) { dog_class.new(name: 'Brutus', trained?: false) }
+    let(:child) { puppy_class.new(name: 'Fido', trained?: true) }
 
     it "defines loose equality between subclasses with #===" do
       expect(dog1).to eq(dog2)
@@ -178,26 +189,28 @@ RSpec.describe ValueSemantics do
   end
 
   context 'complicated DSL usage' do
-    class RocketSurgery
-      include ValueSemantics.for_attributes {
-        qmark? default: 222
-        bool Boolean()
-        moo Anything(), default: {}
-        woof! Either(String, Integer)
-        widgets String, default: [4,5,6]
-        array_test ArrayOf(Integer)
-      }
+    let(:rocket_surgery_class) do
+      Class.new do
+        include ValueSemantics.for_attributes {
+          qmark? default: 222
+          bool Boolean()
+          moo Anything(), default: {}
+          woof! Either(String, Integer)
+          widgets String, default: [4,5,6]
+          def_attr 'array_test', ArrayOf(Integer)
+        }
 
-      def self.coerce_widgets(widgets)
-        case widgets
-        when Array then widgets.join('|')
-        else widgets
+        def self.coerce_widgets(widgets)
+          case widgets
+          when Array then widgets.join('|')
+          else widgets
+          end
         end
       end
     end
 
     it 'works' do
-      rs = RocketSurgery.new(
+      rs = rocket_surgery_class.new(
         bool: true,
         woof!: 55,
         array_test: [1,2,3],
@@ -238,6 +251,10 @@ RSpec.describe ValueSemantics do
       is_expected.not_to be === nil
       is_expected.not_to be === [1,2,3]
     end
+
+    it 'is frozen' do
+      is_expected.to be_frozen
+    end
   end
 
   describe ValueSemantics::ArrayOf do
@@ -251,6 +268,55 @@ RSpec.describe ValueSemantics do
     it 'does not match anything else' do
       is_expected.not_to be === nil
       is_expected.not_to be === 'hello'
+      is_expected.not_to be === %i(1 2 3)
+      is_expected.not_to be === Set.new([1, 2, 3])
+    end
+
+    it 'is frozen' do
+      is_expected.to be_frozen
+    end
+  end
+
+  describe ValueSemantics::DSL do
+    subject { described_class.new }
+
+    it 'turns method calls into attributes' do
+      subject.fOO(Integer, default: 3)
+
+      expect(subject.attributes.first).to have_attributes(
+        name: :fOO,
+        has_default: true,
+        default_value: 3,
+        validator: Integer,
+      )
+    end
+
+    it 'does not interfere with existing methods' do
+      expect(subject.respond_to?(:Float, true)).to be(true)
+      expect(subject.respond_to?(:Float)).to be(false)
+    end
+
+    it 'disallows methods that begin with capitals' do
+      expect { subject.Hello }.to raise_error(NoMethodError)
+      expect(subject.respond_to?(:Wigwam)).to be(false)
+      expect(subject.respond_to?(:Wigwam, true)).to be(false)
+    end
+  end
+
+  describe ValueSemantics::Attribute do
+    subject do
+      described_class.new(
+        name: :foo,
+        has_default: false,
+        default_value: nil,
+        validator: Integer,
+      )
+    end
+
+    it 'raises if attempting to use missing default attribute' do
+      expect { subject.default_value }.to raise_error(
+        "Attribute does not have a default value"
+      )
     end
   end
 

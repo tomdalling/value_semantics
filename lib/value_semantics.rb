@@ -1,23 +1,23 @@
 module ValueSemantics
   def self.for_attributes(&block)
     attributes = DSL.run(&block)
-    generate_module(attributes)
+    generate_module(attributes.freeze)
   end
 
   def self.generate_module(attributes)
-    Module.new.tap do |m|
+    Module.new do
       # include all the instance methods
-      m.include(Semantics)
+      include(Semantics)
 
       # define the attr readers
       attributes.each do |attr|
-        m.module_eval("def #{attr.name}; #{attr.instance_variable}; end")
+        module_eval("def #{attr.name}; #{attr.instance_variable}; end")
       end
 
       # define BaseClass.attributes class method
-      m.const_set(:ATTRIBUTES__, attributes)
-      m.define_singleton_method(:included) do |base|
-        base.const_set(:ValueSemantics_Generated, m)
+      const_set(:ATTRIBUTES__, attributes)
+      def self.included(base)
+        base.const_set(:ValueSemantics_Generated, self)
         class << base
           def attributes
             self::ATTRIBUTES__
@@ -54,7 +54,7 @@ module ValueSemantics
     end
 
     def ==(other)
-      (other.is_a?(self.class) || is_a?(other.class)) && other.to_h == to_h
+      (other.is_a?(self.class) || is_a?(other.class)) && other.to_h.eql?(to_h)
     end
 
     def eql?(other)
@@ -75,7 +75,7 @@ module ValueSemantics
   end
 
   class Attribute
-    attr_reader :name, :has_default, :default_value
+    attr_reader :name, :has_default, :default_value, :validator
 
     def initialize(name:, has_default:, default_value:, validator:)
       @name = name.to_sym
@@ -120,7 +120,7 @@ module ValueSemantics
     end
 
     def validate?(value)
-      !!(@validator === value)
+      validator === value
     end
 
     def instance_variable
@@ -163,26 +163,26 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
-    def declare_attribute(attr_name, validator=Anything, default: NOT_SPECIFIED)
+    def def_attr(attr_name, validator=Anything, default: NOT_SPECIFIED)
       __attributes << Attribute.new(
         name: attr_name,
-        has_default: default != NOT_SPECIFIED,
+        has_default: !(NOT_SPECIFIED.equal?(default)),
         default_value: default,
         validator: validator,
       )
     end
 
-    def method_missing(name, *args, &block)
+    def method_missing(name, *args)
       if respond_to_missing?(name)
-        declare_attribute(name, *args, &block)
+        def_attr(name, *args)
       else
         super
       end
     end
 
-    def respond_to_missing?(method_name, include_private = false)
-      first_letter = method_name.to_s[0]
-      (first_letter == first_letter.downcase) || super
+    def respond_to_missing?(method_name, _include_private=nil)
+      first_letter = method_name[0]
+      first_letter.eql?(first_letter.downcase)
     end
   end
 
@@ -190,12 +190,12 @@ module ValueSemantics
     extend self
 
     def ===(value)
-      true.eql?(value) || false.eql?(value)
+      true.equal?(value) || false.equal?(value)
     end
   end
 
   module Anything
-    def self.===(value)
+    def self.===(_)
       true
     end
   end
