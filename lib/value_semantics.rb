@@ -75,19 +75,21 @@ module ValueSemantics
   end
 
   class Attribute
-    attr_reader :name, :has_default, :default_value, :validator
+    NOT_SPECIFIED = Object.new.freeze
 
-    def initialize(name:, has_default:, default_value:, validator:)
+    attr_reader :name, :validator, :coercer
+
+    def initialize(name:, default_value:, validator:, coercer:)
       @name = name.to_sym
-      @has_default = has_default
       @default_value = default_value
       @validator = validator
+      @coercer = coercer
       freeze
     end
 
     def determine_from!(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
-        if has_default
+        if default_specified?
           default_value
         else
           raise ArgumentError, "Value missing for attribute '#{name}'"
@@ -104,15 +106,19 @@ module ValueSemantics
     end
 
     def coerce(attr_value, klass)
-      if klass.respond_to?(coercion_method)
-        klass.public_send(coercion_method, attr_value)
-      else
-        attr_value
+      case coercer
+      when false, nil then attr_value # no coercion
+      when true then klass.public_send(coercion_method, attr_value)
+      else coercer.call(attr_value)
       end
     end
 
+    def default_specified?
+      @default_value != NOT_SPECIFIED
+    end
+
     def default_value
-      if has_default
+      if default_specified?
         @default_value
       else
         fail "Attribute does not have a default value"
@@ -133,8 +139,6 @@ module ValueSemantics
   end
 
   class DSL
-    NOT_SPECIFIED = Object.new
-
     def self.run(&block)
       dsl = new
       dsl.instance_eval(&block)
@@ -163,12 +167,12 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
-    def def_attr(attr_name, validator=Anything, default: NOT_SPECIFIED)
+    def def_attr(attr_name, validator=Anything, default: Attribute::NOT_SPECIFIED, coerce: false)
       __attributes << Attribute.new(
         name: attr_name,
-        has_default: !(NOT_SPECIFIED.equal?(default)),
-        default_value: default,
         validator: validator,
+        default_value: default,
+        coercer: coerce
       )
     end
 

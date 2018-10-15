@@ -121,32 +121,55 @@ RSpec.describe ValueSemantics do
   end
 
   context 'coercion' do
-    class Person
+    module Callable
+      def self.call(x)
+        "callable: #{x}"
+      end
+    end
+
+    class CoercionTest
       include ValueSemantics.for_attributes {
-        likes Array
+        no_coercion String, default: ""
+        with_true String, coerce: true, default: ""
+        with_callable String, coerce: Callable, default: ""
+        double_it String, coerce: ->(x) { x * 2 }, default: "42"
       }
 
       private
 
-      def self.coerce_likes(likes)
-        if likes.is_a?(String)
-          likes.split(',').map(&:strip)
-        else
-          likes
-        end
+      def self.coerce_with_true(value)
+        "class_method: #{value}"
+      end
+
+      def self.coerce_no_coercion(value)
+        fail "Should never get here"
       end
     end
 
-    it "calls the coercion block before validation" do
-      sally = Person.new(likes: 'pie, cake, icecream')
-      expect(sally.likes).to eq(['pie', 'cake', 'icecream'])
-
-      bob = Person.new(likes: ['a', 'b', 'c'])
-      expect(bob.likes).to eq(['a', 'b', 'c'])
+    it "does not call coercion methods by default" do
+      subject = CoercionTest.new(no_coercion: 'dinklage')
+      expect(subject.no_coercion).to eq('dinklage')
     end
 
-    it "still validates the coerced value" do
-      expect { Person.new(likes: {}) }.to raise_error(ArgumentError, /likes/)
+    it "calls a class method when coerce: true" do
+      subject = CoercionTest.new(with_true: 'peter')
+      expect(subject.with_true).to eq('class_method: peter')
+    end
+
+    it "calls obj.call when coerce: obj" do
+      subject = CoercionTest.new(with_callable: 'daenerys')
+      expect(subject.with_callable).to eq('callable: daenerys')
+    end
+
+    it "coerces default values" do
+      subject = CoercionTest.new
+      expect(subject.double_it).to eq('4242')
+    end
+
+    it "performs coercion before validation" do
+      expect {
+        CoercionTest.new(double_it: 6)
+      }.to raise_error(ArgumentError, "Value for attribute 'double_it' is not valid: 12")
     end
   end
 
@@ -196,7 +219,7 @@ RSpec.describe ValueSemantics do
           bool Boolean()
           moo Anything(), default: {}
           woof! Either(String, Integer)
-          widgets String, default: [4,5,6]
+          widgets String, default: [4,5,6], coerce: true
           def_attr 'array_test', ArrayOf(Integer)
         }
 
@@ -281,13 +304,13 @@ RSpec.describe ValueSemantics do
     subject { described_class.new }
 
     it 'turns method calls into attributes' do
-      subject.fOO(Integer, default: 3)
+      subject.fOO(Integer, default: 3, coerce: 'hi')
 
       expect(subject.attributes.first).to have_attributes(
         name: :fOO,
-        has_default: true,
         default_value: 3,
         validator: Integer,
+        coercer: 'hi',
       )
     end
 
@@ -307,9 +330,9 @@ RSpec.describe ValueSemantics do
     subject do
       described_class.new(
         name: :foo,
-        has_default: false,
-        default_value: nil,
         validator: Integer,
+        default_value: described_class::NOT_SPECIFIED,
+        coercer: false,
       )
     end
 
