@@ -106,15 +106,17 @@ module ValueSemantics
     end
 
     def coerce(attr_value, klass)
-      case coercer
-      when false, nil then attr_value # no coercion
-      when true then klass.public_send(coercion_method, attr_value)
-      else coercer.call(attr_value)
+      return attr_value unless coercer # coercion not enabled
+
+      if coercer.equal?(true)
+        klass.public_send(coercion_method, attr_value)
+      else
+        coercer.call(attr_value)
       end
     end
 
     def default_specified?
-      @default_value != NOT_SPECIFIED
+      !@default_value.equal?(NOT_SPECIFIED)
     end
 
     def default_value
@@ -167,7 +169,7 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
-    def def_attr(attr_name, validator=Anything, default: Attribute::NOT_SPECIFIED, coerce: false)
+    def def_attr(attr_name, validator=Anything, default: Attribute::NOT_SPECIFIED, coerce: nil)
       __attributes << Attribute.new(
         name: attr_name,
         validator: validator,
