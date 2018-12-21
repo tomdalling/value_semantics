@@ -103,7 +103,7 @@ Defaults
 --------
 
 Defaults can be specified in one of two ways:
-the `:default` option, or the `default_generator` option.
+the `:default` option, or the `:default_generator` option.
 
 ```ruby
 class Cat
