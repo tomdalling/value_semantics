@@ -1,4 +1,6 @@
 module ValueSemantics
+  NOT_SPECIFIED = Object.new.freeze
+
   def self.for_attributes(&block)
     attributes = DSL.run(&block)
     generate_module(attributes.freeze)
@@ -75,13 +77,13 @@ module ValueSemantics
   end
 
   class Attribute
-    NOT_SPECIFIED = Object.new.freeze
+    NO_DEFAULT_GENERATOR = ->{ raise "Attribute does not have a default value" }
 
-    attr_reader :name, :validator, :coercer
+    attr_reader :name, :validator, :coercer, :default_generator
 
-    def initialize(name:, default_value:, validator:, coercer:)
+    def initialize(name:, default_generator:, validator:, coercer:)
       @name = name.to_sym
-      @default_value = default_value
+      @default_generator = default_generator
       @validator = validator
       @coercer = coercer
       freeze
@@ -89,10 +91,10 @@ module ValueSemantics
 
     def determine_from!(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
-        if default_specified?
-          default_value
-        else
+        if default_generator.equal?(NO_DEFAULT_GENERATOR)
           raise ArgumentError, "Value missing for attribute '#{name}'"
+        else
+          default_generator.call
         end
       end
 
@@ -112,18 +114,6 @@ module ValueSemantics
         klass.public_send(coercion_method, attr_value)
       else
         coercer.call(attr_value)
-      end
-    end
-
-    def default_specified?
-      !@default_value.equal?(NOT_SPECIFIED)
-    end
-
-    def default_value
-      if default_specified?
-        @default_value
-      else
-        fail "Attribute does not have a default value"
       end
     end
 
@@ -169,11 +159,28 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
-    def def_attr(attr_name, validator=Anything, default: Attribute::NOT_SPECIFIED, coerce: nil)
+    def def_attr(attr_name,
+                 validator=Anything,
+                 default: NOT_SPECIFIED,
+                 default_generator: nil,
+                 coerce: nil
+                 )
+      generator = begin
+        if default_generator && !default.equal?(NOT_SPECIFIED)
+          raise ArgumentError, "Attribute '#{attr_name}' can not have both a default, and a default_generator"
+        elsif default_generator
+          default_generator
+        elsif !default.equal?(NOT_SPECIFIED)
+          ->{ default }
+        else
+          Attribute::NO_DEFAULT_GENERATOR
+        end
+      end
+
       __attributes << Attribute.new(
         name: attr_name,
         validator: validator,
-        default_value: default,
+        default_generator: generator,
         coercer: coerce
       )
     end

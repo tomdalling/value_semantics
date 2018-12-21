@@ -78,22 +78,42 @@ RSpec.describe ValueSemantics do
   end
 
   context 'default values' do
-    class Cat
-      include ValueSemantics.for_attributes {
-        name default: 'Kitty'
-      }
+    let(:cat) do
+      Class.new do
+        include ValueSemantics.for_attributes {
+          name default: 'Kitty'
+          scratch_proc default: ->{ "scratch" }
+          born_at default_generator: ->{ Time.now }
+        }
+      end
     end
 
     it "uses the default if no value is given" do
-      expect(Cat.new.name).to eq('Kitty')
+      expect(cat.new.name).to eq('Kitty')
     end
 
     it "allows the default to be overriden" do
-      expect(Cat.new(name: 'Tomcat').name).to eq('Tomcat')
+      expect(cat.new(name: 'Tomcat').name).to eq('Tomcat')
     end
 
     it "does not override nil" do
-      expect(Cat.new(name: nil).name).to be_nil
+      expect(cat.new(name: nil).name).to be_nil
+    end
+
+    it "allows procs as default values" do
+      expect(cat.new.scratch_proc.call).to eq("scratch")
+    end
+
+    it "can generate defaults with a proc" do
+      expect(cat.new.born_at).to be_a(Time)
+    end
+
+    it "does not allow both `default:` and `default_generator:` options" do
+      expect do
+        ValueSemantics.for_attributes {
+          both default: 5, default_generator: ->{ rand }
+        }
+      end.to raise_error(ArgumentError, "Attribute 'both' can not have both a default, and a default_generator")
     end
   end
 
@@ -308,10 +328,10 @@ RSpec.describe ValueSemantics do
 
       expect(subject.attributes.first).to have_attributes(
         name: :fOO,
-        default_value: 3,
         validator: Integer,
         coercer: 'hi',
       )
+      expect(subject.attributes.first.default_generator.call).to eq(3)
     end
 
     it 'does not interfere with existing methods' do
@@ -331,13 +351,13 @@ RSpec.describe ValueSemantics do
       described_class.new(
         name: :foo,
         validator: Integer,
-        default_value: described_class::NOT_SPECIFIED,
+        default_generator: described_class::NO_DEFAULT_GENERATOR,
         coercer: false,
       )
     end
 
     it 'raises if attempting to use missing default attribute' do
-      expect { subject.default_value }.to raise_error(
+      expect { subject.default_generator.call }.to raise_error(
         "Attribute does not have a default value"
       )
     end
