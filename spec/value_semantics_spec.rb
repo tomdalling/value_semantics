@@ -10,8 +10,11 @@ RSpec.describe ValueSemantics do
     end
   end
 
-  before do
-    Dog = dog_class unless defined? Dog
+  def with_constant(const_name, const_value)
+    Object.const_set(const_name, const_value)
+    yield
+  ensure
+    Object.send(:remove_const, const_name)
   end
 
   context 'basic usage' do
@@ -39,13 +42,13 @@ RSpec.describe ValueSemantics do
     it "can not be constructed with attributes missing" do
       expect {
         dog = dog_class.new(name: 'Fido')
-      }.to raise_error(ArgumentError, "Value missing for attribute 'trained?'")
+      }.to raise_error(ValueSemantics::AttributesMissing, "Value missing for attribute 'trained?'")
     end
 
     it "can not be constructed with undefined attributes" do
       expect {
         dog_class.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
-      }.to raise_error(ArgumentError, "Unrecognised attributes: :meow, :moo")
+      }.to raise_error(ValueSemantics::UnrecognisedAttributes, "Unrecognised attributes: :meow, :moo")
     end
 
     it "can do non-destructive updates" do
@@ -62,18 +65,27 @@ RSpec.describe ValueSemantics do
     end
 
     it "has a human-friendly #inspect string" do
-      dog = Dog.new(name: 'Fido', trained?: true)
-      expect(dog.inspect).to eq('#<Dog name="Fido" trained?=true>')
+      with_constant(:Doggums, dog_class) do
+        dog = Doggums.new(name: 'Fido', trained?: true)
+        expect(dog.inspect).to eq('#<Doggums name="Fido" trained?=true>')
+      end
     end
 
     it "has a human-friendly module name" do
-      mod = Dog.ancestors[1]
-      expect(mod.name).to eq("Dog::ValueSemantics_Generated")
+      with_constant(:Doggums, dog_class) do
+        mod = Doggums.ancestors[1]
+        expect(mod.name).to eq("Doggums::ValueSemantics_Attributes")
+      end
     end
 
     it 'has a list of frozen attributes' do
       expect(dog_class.attributes).to be_frozen
       expect(dog_class.attributes.first).to be_frozen
+    end
+
+    it "has a frozen recipe" do
+      expect(dog_class.value_semantics_recipe).to be_a(ValueSemantics::Recipe)
+      expect(dog_class.value_semantics_recipe).to be_frozen
     end
   end
 
@@ -347,18 +359,20 @@ RSpec.describe ValueSemantics do
   end
 
   describe ValueSemantics::Attribute do
-    subject do
-      described_class.new(
-        name: :foo,
-        validator: Integer,
-        default_generator: described_class::NO_DEFAULT_GENERATOR,
-        coercer: false,
-      )
-    end
+    subject { ValueSemantics::Attribute.new(name: :whatever) }
 
     it 'raises if attempting to use missing default attribute' do
       expect { subject.default_generator.call }.to raise_error(
         "Attribute does not have a default value"
+      )
+    end
+
+    it 'has default attributes' do
+      is_expected.to have_attributes(
+        name: :whatever,
+        validator: be(ValueSemantics::Anything),
+        coercer: nil,
+        default_generator: be(ValueSemantics::Attribute::NO_DEFAULT_GENERATOR),
       )
     end
   end

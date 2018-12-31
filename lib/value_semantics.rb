@@ -1,35 +1,44 @@
 module ValueSemantics
+  class Error < StandardError; end
+  class UnrecognisedAttributes < Error; end
+  class NoDefault < Error; end
+  class AttributesMissing < Error; end
+
   NOT_SPECIFIED = Object.new.freeze
 
   def self.for_attributes(&block)
-    attributes = DSL.run(&block)
-    generate_module(attributes.freeze)
+    recipe = DSL.run(&block)
+    generate_module(recipe)
   end
 
-  def self.generate_module(attributes)
+  def self.generate_module(recipe)
     Module.new do
-      # include all the instance methods
-      include(Semantics)
+      const_set(:VALUE_SEMANTICS_RECIPE__, recipe)
+      include(InstanceMethods)
 
       # define the attr readers
-      attributes.each do |attr|
+      recipe.attributes.each do |attr|
         module_eval("def #{attr.name}; #{attr.instance_variable}; end")
       end
 
-      # define BaseClass.attributes class method
-      const_set(:ATTRIBUTES__, attributes)
       def self.included(base)
-        base.const_set(:ValueSemantics_Generated, self)
-        class << base
-          def attributes
-            self::ATTRIBUTES__
-          end
-        end
+        base.const_set(:ValueSemantics_Attributes, self)
+        base.extend(ClassMethods)
       end
     end
   end
 
-  module Semantics
+  module ClassMethods
+    def value_semantics_recipe
+      self::VALUE_SEMANTICS_RECIPE__
+    end
+
+    def attributes
+      value_semantics_recipe.attributes
+    end
+  end
+
+  module InstanceMethods
     def initialize(given_attrs = {})
       remaining_attrs = given_attrs.dup
 
@@ -41,7 +50,7 @@ module ValueSemantics
 
       unless remaining_attrs.empty?
         unrecognised = remaining_attrs.keys.map(&:inspect).join(', ')
-        raise ArgumentError, "Unrecognised attributes: #{unrecognised}"
+        raise UnrecognisedAttributes, "Unrecognised attributes: #{unrecognised}"
       end
     end
 
@@ -77,11 +86,14 @@ module ValueSemantics
   end
 
   class Attribute
-    NO_DEFAULT_GENERATOR = ->{ raise "Attribute does not have a default value" }
+    NO_DEFAULT_GENERATOR = ->{ raise NoDefault, "Attribute does not have a default value" }
 
     attr_reader :name, :validator, :coercer, :default_generator
 
-    def initialize(name:, default_generator:, validator:, coercer:)
+    def initialize(name:,
+                   default_generator: NO_DEFAULT_GENERATOR,
+                   validator: Anything,
+                   coercer: nil)
       @name = name.to_sym
       @default_generator = default_generator
       @validator = validator
@@ -92,7 +104,7 @@ module ValueSemantics
     def determine_from!(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
         if default_generator.equal?(NO_DEFAULT_GENERATOR)
-          raise ArgumentError, "Value missing for attribute '#{name}'"
+          raise AttributesMissing, "Value missing for attribute '#{name}'"
         else
           default_generator.call
         end
@@ -134,7 +146,7 @@ module ValueSemantics
     def self.run(&block)
       dsl = new
       dsl.instance_eval(&block)
-      dsl.__attributes
+      Recipe.new(attributes: dsl.__attributes.freeze)
     end
 
     attr_reader :__attributes
@@ -163,8 +175,7 @@ module ValueSemantics
                  validator=Anything,
                  default: NOT_SPECIFIED,
                  default_generator: nil,
-                 coerce: nil
-                 )
+                 coerce: nil)
       generator = begin
         if default_generator && !default.equal?(NOT_SPECIFIED)
           raise ArgumentError, "Attribute '#{attr_name}' can not have both a default, and a default_generator"
@@ -181,7 +192,7 @@ module ValueSemantics
         name: attr_name,
         validator: validator,
         default_generator: generator,
-        coercer: coerce
+        coercer: coerce,
       )
     end
 
@@ -200,9 +211,7 @@ module ValueSemantics
   end
 
   module Boolean
-    extend self
-
-    def ===(value)
+    def self.===(value)
       true.equal?(value) || false.equal?(value)
     end
   end
@@ -236,6 +245,15 @@ module ValueSemantics
 
     def ===(value)
       Array === value && value.all? { |element| element_validator === element }
+    end
+  end
+
+  class Recipe
+    attr_reader :attributes
+
+    def initialize(attributes:)
+      @attributes = attributes
+      freeze
     end
   end
 
