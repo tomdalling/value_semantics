@@ -8,10 +8,10 @@ module ValueSemantics
 
   def self.for_attributes(&block)
     recipe = DSL.run(&block)
-    generate_module(recipe)
+    bake_module(recipe)
   end
 
-  def self.generate_module(recipe)
+  def self.bake_module(recipe)
     Module.new do
       const_set(:VALUE_SEMANTICS_RECIPE__, recipe)
       include(InstanceMethods)
