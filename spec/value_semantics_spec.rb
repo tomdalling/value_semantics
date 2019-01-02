@@ -18,13 +18,16 @@ RSpec.describe ValueSemantics do
   end
 
   context 'basic usage' do
-    it "has a keyword constructor and attr readers" do
+    it "has a keyword constructor, attr readers, and ivars" do
       dog = dog_class.new(name: 'Fido', trained?: true)
 
       expect(dog).to have_attributes(
         name: 'Fido',
         trained?: true,
       )
+
+      expect(dog.instance_variable_get(:@name)).to eq('Fido')
+      expect(dog.instance_variable_get(:@trained)).to eq(true)
     end
 
     it "does not mutate constructor params" do
