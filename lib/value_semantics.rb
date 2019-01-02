@@ -1,8 +1,8 @@
 module ValueSemantics
   class Error < StandardError; end
-  class UnrecognisedAttributes < Error; end
-  class NoDefault < Error; end
-  class AttributesMissing < Error; end
+  class UnrecognizedAttributes < Error; end
+  class NoDefaultValue < Error; end
+  class MissingAttributes < Error; end
 
   NOT_SPECIFIED = Object.new.freeze
 
@@ -29,12 +29,8 @@ module ValueSemantics
   end
 
   module ClassMethods
-    def value_semantics_recipe
+    def value_semantics
       self::VALUE_SEMANTICS_RECIPE__
-    end
-
-    def attributes
-      value_semantics_recipe.attributes
     end
   end
 
@@ -42,7 +38,7 @@ module ValueSemantics
     def initialize(given_attrs = {})
       remaining_attrs = given_attrs.dup
 
-      self.class.attributes.each do |attr|
+      self.class.value_semantics.attributes.each do |attr|
         key, value = attr.determine_from!(remaining_attrs, self.class)
         instance_variable_set(attr.instance_variable, value)
         remaining_attrs.delete(key)
@@ -50,7 +46,7 @@ module ValueSemantics
 
       unless remaining_attrs.empty?
         unrecognised = remaining_attrs.keys.map(&:inspect).join(', ')
-        raise UnrecognisedAttributes, "Unrecognised attributes: #{unrecognised}"
+        raise UnrecognizedAttributes, "Unrecognized attributes: #{unrecognised}"
       end
     end
 
@@ -59,7 +55,7 @@ module ValueSemantics
     end
 
     def to_h
-      self.class.attributes
+      self.class.value_semantics.attributes
         .map { |attr| [attr.name, public_send(attr.name)] }
         .to_h
     end
@@ -86,7 +82,9 @@ module ValueSemantics
   end
 
   class Attribute
-    NO_DEFAULT_GENERATOR = ->{ raise NoDefault, "Attribute does not have a default value" }
+    NO_DEFAULT_GENERATOR = lambda do
+      raise NoDefaultValue, "Attribute does not have a default value"
+    end
 
     attr_reader :name, :validator, :coercer, :default_generator
 
@@ -101,10 +99,35 @@ module ValueSemantics
       freeze
     end
 
+    def self.define(name,
+                    validator=Anything,
+                    default: NOT_SPECIFIED,
+                    default_generator: nil,
+                    coerce: nil)
+      generator = begin
+        if default_generator && !default.equal?(NOT_SPECIFIED)
+          raise ArgumentError, "Attribute '#{name}' can not have both a :default and a :default_generator"
+        elsif default_generator
+          default_generator
+        elsif !default.equal?(NOT_SPECIFIED)
+          ->{ default }
+        else
+          NO_DEFAULT_GENERATOR
+        end
+      end
+
+      new(
+        name: name,
+        validator: validator,
+        default_generator: generator,
+        coercer: coerce,
+      )
+    end
+
     def determine_from!(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
         if default_generator.equal?(NO_DEFAULT_GENERATOR)
-          raise AttributesMissing, "Value missing for attribute '#{name}'"
+          raise MissingAttributes, "Value missing for attribute '#{name}'"
         else
           default_generator.call
         end
@@ -171,29 +194,8 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
-    def def_attr(attr_name,
-                 validator=Anything,
-                 default: NOT_SPECIFIED,
-                 default_generator: nil,
-                 coerce: nil)
-      generator = begin
-        if default_generator && !default.equal?(NOT_SPECIFIED)
-          raise ArgumentError, "Attribute '#{attr_name}' can not have both a default, and a default_generator"
-        elsif default_generator
-          default_generator
-        elsif !default.equal?(NOT_SPECIFIED)
-          ->{ default }
-        else
-          Attribute::NO_DEFAULT_GENERATOR
-        end
-      end
-
-      __attributes << Attribute.new(
-        name: attr_name,
-        validator: validator,
-        default_generator: generator,
-        coercer: coerce,
-      )
+    def def_attr(*args)
+      __attributes << Attribute.define(*args)
     end
 
     def method_missing(name, *args)

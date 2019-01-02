@@ -42,13 +42,13 @@ RSpec.describe ValueSemantics do
     it "can not be constructed with attributes missing" do
       expect {
         dog = dog_class.new(name: 'Fido')
-      }.to raise_error(ValueSemantics::AttributesMissing, "Value missing for attribute 'trained?'")
+      }.to raise_error(ValueSemantics::MissingAttributes, "Value missing for attribute 'trained?'")
     end
 
     it "can not be constructed with undefined attributes" do
       expect {
         dog_class.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
-      }.to raise_error(ValueSemantics::UnrecognisedAttributes, "Unrecognised attributes: :meow, :moo")
+      }.to raise_error(ValueSemantics::UnrecognizedAttributes, "Unrecognized attributes: :meow, :moo")
     end
 
     it "can do non-destructive updates" do
@@ -78,14 +78,12 @@ RSpec.describe ValueSemantics do
       end
     end
 
-    it 'has a list of frozen attributes' do
-      expect(dog_class.attributes).to be_frozen
-      expect(dog_class.attributes.first).to be_frozen
-    end
-
     it "has a frozen recipe" do
-      expect(dog_class.value_semantics_recipe).to be_a(ValueSemantics::Recipe)
-      expect(dog_class.value_semantics_recipe).to be_frozen
+      vs = dog_class.value_semantics
+      expect(vs).to be_a(ValueSemantics::Recipe)
+      expect(vs).to be_frozen
+      expect(vs.attributes).to be_frozen
+      expect(vs.attributes.first).to be_frozen
     end
   end
 
@@ -125,7 +123,7 @@ RSpec.describe ValueSemantics do
         ValueSemantics.for_attributes {
           both default: 5, default_generator: ->{ rand }
         }
-      end.to raise_error(ArgumentError, "Attribute 'both' can not have both a default, and a default_generator")
+      end.to raise_error(ArgumentError, "Attribute 'both' can not have both a :default and a :default_generator")
     end
   end
 
