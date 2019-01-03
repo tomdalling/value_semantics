@@ -69,7 +69,7 @@ module ValueSemantics
     end
 
     def hash
-      @__hash ||= (to_h.hash ^ self.class.hash)
+      to_h.hash ^ self.class.hash
     end
 
     def inspect
