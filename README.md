@@ -164,8 +164,8 @@ for common situations:
 class LightSwitch
   include ValueSemantics.for_attributes {
 
-    # Boolean: only allows `true` or `false`
-    on? Boolean()
+    # Bool: only allows `true` or `false`
+    on? Bool()
 
     # ArrayOf: validates elements in an array
     light_ids ArrayOf(Integer)
@@ -174,7 +174,7 @@ class LightSwitch
     color Either(Integer, String, nil)
 
     # these validators are composable
-    wierd_attr Either(Boolean(), ArrayOf(Boolean()))
+    wierd_attr Either(Bool(), ArrayOf(Bool()))
   }
 end
 

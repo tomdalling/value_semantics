@@ -178,8 +178,8 @@ module ValueSemantics
       @__attributes = []
     end
 
-    def Boolean
-      Boolean
+    def Bool
+      Bool
     end
 
     def Either(*subvalidators)
@@ -212,7 +212,7 @@ module ValueSemantics
     end
   end
 
-  module Boolean
+  module Bool
     def self.===(value)
       true.equal?(value) || false.equal?(value)
     end

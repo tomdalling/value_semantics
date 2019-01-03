@@ -249,7 +249,7 @@ RSpec.describe ValueSemantics do
       Class.new do
         include ValueSemantics.for_attributes {
           qmark? default: 222
-          bool Boolean()
+          bool Bool()
           moo Anything(), default: {}
           woof! Either(String, Integer)
           widgets String, default: [4,5,6], coerce: true
@@ -283,7 +283,7 @@ RSpec.describe ValueSemantics do
     end
   end
 
-  describe ValueSemantics::Boolean do
+  describe ValueSemantics::Bool do
     it 'matches true and false' do
       is_expected.to be === true
       is_expected.to be === false
