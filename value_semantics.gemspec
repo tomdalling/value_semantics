@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.7.0"
   spec.add_development_dependency "mutant-rspec", "0.8.17"
   spec.add_development_dependency "mutant", "0.8.18"
+  spec.add_development_dependency "yard"
   spec.add_development_dependency "byebug"
   spec.add_development_dependency "gem-release"
 end

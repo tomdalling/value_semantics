@@ -6,11 +6,26 @@ module ValueSemantics
 
   NOT_SPECIFIED = Object.new.freeze
 
+  #
+  # Creates a module via the DSL
+  #
+  # @yield The block containing the DSL
+  # @return [Module]
+  #
+  # @see DSL
+  # @see InstanceMethods
+  #
   def self.for_attributes(&block)
     recipe = DSL.run(&block)
     bake_module(recipe)
   end
 
+  #
+  # Creates a module from a {Recipe}
+  #
+  # @param recipe [Recipe]
+  # @return [Module]
+  #
   def self.bake_module(recipe)
     Module.new do
       const_set(:VALUE_SEMANTICS_RECIPE__, recipe)
@@ -28,13 +43,34 @@ module ValueSemantics
     end
   end
 
+  #
+  # All the class methods available on ValueSemantics classes
+  #
+  # When a ValueSemantics module is included into a class,
+  # the class is extended by this module.
+  #
   module ClassMethods
+    #
+    # @return [Recipe] the recipe used to build the ValueSemantics module that
+    #                  was included into this class.
+    #
     def value_semantics
       self::VALUE_SEMANTICS_RECIPE__
     end
   end
 
+  #
+  # All the instance methods available on ValueSemantics objects
+  #
   module InstanceMethods
+    #
+    # Creates a value object based on a Hash of attributes
+    #
+    # @param given_attrs [Hash] a hash of attributes, with symbols for keys
+    # @raise [UnrecognizedAttributes] if given_attrs contains keys that are not attributes
+    # @raise [MissingAttributes] if given_attrs is missing any attributes that do not have defaults
+    # @raise [ArgumentError] if any attribute values do no pass their validators
+    #
     def initialize(given_attrs = {})
       remaining_attrs = given_attrs.dup
 
@@ -50,24 +86,48 @@ module ValueSemantics
       end
     end
 
+    #
+    # Creates a copy of this object, with the given attributes changed (non-destructive update)
+    #
+    # @param new_attrs [Hash] the attributes to change
+    # @return A new object, with the attribute changes applied
+    #
     def with(new_attrs)
       self.class.new(to_h.merge(new_attrs))
     end
 
+    #
+    # @return [Hash] all of the attributes
+    #
     def to_h
       self.class.value_semantics.attributes
         .map { |attr| [attr.name, public_send(attr.name)] }
         .to_h
     end
 
+    #
+    # Loose equality
+    #
+    # @return [Boolean] whether all attributes are equal, and the object
+    #                   classes are ancestors of eachother in any way
+    #
     def ==(other)
       (other.is_a?(self.class) || is_a?(other.class)) && other.to_h.eql?(to_h)
     end
 
+    #
+    # Strict equality
+    #
+    # @return [Boolean] whether all attribuets are equal, and both objects
+    #                   has the exact same class
+    #
     def eql?(other)
       other.class.equal?(self.class) && other.to_h.eql?(to_h)
     end
 
+    #
+    # Unique-ish integer, based on attributes and class of the object
+    #
     def hash
       to_h.hash ^ self.class.hash
     end
@@ -81,6 +141,9 @@ module ValueSemantics
     end
   end
 
+  #
+  # Represents a single attribute of a value class
+  #
   class Attribute
     NO_DEFAULT_GENERATOR = lambda do
       raise NoDefaultValue, "Attribute does not have a default value"
@@ -165,7 +228,34 @@ module ValueSemantics
     end
   end
 
+  #
+  # Contains all the configuration necessary to bake a ValueSemantics module
+  #
+  # @see ValueSemantics.bake_module
+  #
+  class Recipe
+    attr_reader :attributes
+
+    def initialize(attributes:)
+      @attributes = attributes
+      freeze
+    end
+  end
+
+  #
+  # Builds a {Recipe} via DSL methods
+  #
+  # DSL blocks are <code>instance_eval</code>d against an object of this class.
+  #
+  # @see Recipe
+  # @see ValueSemantics.for_attributes
+  #
   class DSL
+    #
+    # Builds a {Recipe} from a DSL block
+    #
+    # @yield to the block containing the DSL
+    # @return [Recipe]
     def self.run(&block)
       dsl = new
       dsl.instance_eval(&block)
@@ -212,18 +302,29 @@ module ValueSemantics
     end
   end
 
+  #
+  # Validator that only matches `true` and `false`
+  #
   module Bool
+    # @return [Boolean]
     def self.===(value)
       true.equal?(value) || false.equal?(value)
     end
   end
 
+  #
+  # Validator that matches any and all values
+  #
   module Anything
+    # @return [true]
     def self.===(_)
       true
     end
   end
 
+  #
+  # Validator that matches if any of the given subvalidators matches
+  #
   class Either
     attr_reader :subvalidators
 
@@ -232,11 +333,15 @@ module ValueSemantics
       freeze
     end
 
+    # @return [Boolean]
     def ===(value)
       subvalidators.any? { |sv| sv === value }
     end
   end
 
+  #
+  # Validator that matches arrays if each element matches a given subvalidator
+  #
   class ArrayOf
     attr_reader :element_validator
 
@@ -245,17 +350,9 @@ module ValueSemantics
       freeze
     end
 
+    # @return [Boolean]
     def ===(value)
       Array === value && value.all? { |element| element_validator === element }
-    end
-  end
-
-  class Recipe
-    attr_reader :attributes
-
-    def initialize(attributes:)
-      @attributes = attributes
-      freeze
     end
   end
 
