@@ -1,12 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 set -ue
 
-PATTERN=${1:-ValueSemantics*}
+MUTANT_PATTERN=${1:-ValueSemantics*}
+
+bundle exec rspec
+
+if [[ "${MUTATION_TEST:-true}" == "false" ]] ; then
+    exit 0
+fi
 
 bundle exec mutant \
     --include lib \
     --require value_semantics \
-    --use rspec "$PATTERN" \
+    --use rspec "$MUTANT_PATTERN" \
     # Mutant 0.8.24 introduces new mutations that cause infinite recursion inside
     # #method_missing. These --ignore-subject lines prevent that from happening
     #--ignore-subject "ValueSemantics::DSL#method_missing" \

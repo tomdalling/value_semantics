@@ -1,14 +1,24 @@
 language: ruby
+script: bin/test
+
+# test old Ruby versions WITHOUT mutation testing
 rvm:
   - 2.3.8
   - 2.4.5
   - 2.5.3
-  - 2.6.0
-script: bundle exec rspec #TODO: bin/mutation_test.sh
+env: MUTATION_TEST=false
+
+# test the latest Ruby version WITH mutation testing
+matrix:
+  include:
+  - rvm: 2.6.0
+    env: MUTATION_TEST=true
+
+# deploy gem on tagged commits, on the latest Ruby version only
 deploy:
   provider: rubygems
   on:
     tags: true
-    rvm: 2.6.0
+    env: MUTATION_TEST=true
   api_key:
     secure: nL74QuUczEpA0qbhSBN2zjGdviWgKB3wR6vFvwervv1MZNWmwOQUYe99Oq9kPeyc8/x2MR/H6PQm5qbrk/WAfRede01WxlZ/EBUW+9CYGrxcBsGONx9IULO8A0I8/yN/YJHW2vjo3dfR66EwVsXTVWq8U63PRRcwJIyTqnIiUm2sxauMQoPRBbXG+pD9v/EJSn3ugpdtxp0lVYDn8LDKk5Ho4/wbpY4ML11XUJa9mz9CyR/GsAzdy5FTXaDMOwuWOVEx9cab7m4qPOBhmlJY4TrmooFpxTxRwChcvByjq1IboEd2M3RT5on7Q/xDTlHSOuT0OS8mnS2AocGT4a1gC+W/xOlghgEcN+xs2V5mfucR6+iUYlCy32uz1w3ey7T2X5xN4ubut09r1xLi7eu1NisAoAc+GOJ4TIxQNqkeRhY4X/fs8j7SMfOEMDr6pPxSLKZxgSvExt+IbdcZD/uQ7rTBQkadYCbc9MX5dHazBievmar3ZsFffbIf+n13FVDXsaPgRt7DlFM5dqGrEwVwt1jFRhdFuDCjkj4QWOLn7E1uY3XqgrqGvgUBlF8Znwc6qicW8zxV4SIWhqIzCOH6L9WIZGLHNq0remoCd9sq9Ter9av3jL+6UmZRRAr+JceeZfZmsYIXKomECzleM9FXMx7FXlpjJKOlf3JnrfeCTwI=
