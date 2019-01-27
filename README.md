@@ -5,15 +5,15 @@
 ValueSemantics
 ==============
 
-Create value classes quickly, with all the [conventions of a good value object](https://github.com/zverok/good-value-object).
+A gem for making value classes.
 
-Generates modules that provide value semantics for a given set of attributes.
-Provides the behaviour of an immutable struct-like value class,
-with light-weight validation and coercion.
+Generates modules that provide [conventional value semantics](https://github.com/zverok/good-value-object) for a given set of attributes.
+The behaviour is similar to an immutable `Struct` class,
+plus extensible, lightweight validation and coercion.
 
 These are intended for internal use, as opposed to validating user input like ActiveRecord.
-Invalid or missing attributes cause an exception intended for developers,
-not an error message intended for the user.
+Invalid or missing attributes cause an exception for developers,
+not an error message intended for application users.
 
 
 Defining and Creating Value Objects
@@ -321,6 +321,7 @@ Or install it yourself as:
 Bug reports and pull requests are welcome on GitHub at:
 https://github.com/tomdalling/value_semantics
 
+Keep in mind that this gem aims to be as close to 100% backwards compatible as possible.
 
 ## License
 
