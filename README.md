@@ -15,9 +15,10 @@ These are intended for internal use, as opposed to validating user input like Ac
 Invalid or missing attributes cause an exception for developers,
 not an error message intended for application users.
 
-See the [announcement blog post][] for some of the rationale behind the gem.
+See the [announcement blog post][] for some of the rationale behind the gem, and some [discussion on Reddit].
 
 [announcement blog post]: https://www.rubypigeon.com/posts/value-semantics-gem-for-making-value-classes/
+[discussion on Reddit]: https://www.reddit.com/r/ruby/comments/akz4fs/valuesemanticsa_gem_for_making_value_classes/
 
 
 Defining and Creating Value Objects
