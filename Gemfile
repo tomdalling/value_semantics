@@ -1,6 +1,8 @@
 source "https://rubygems.org"
 
-git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
+source 'https://oss:fLUos7k6c7Ak7zjhwbYphPJbwBk1Uuew@gem.mutant.dev' do
+  gem 'mutant-license'
+end
 
 # Specify your gem's dependencies in the gemspec
 gemspec
