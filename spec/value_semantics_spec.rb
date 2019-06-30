@@ -1,4 +1,5 @@
 require "spec_helper"
+require "pp"
 
 RSpec.describe ValueSemantics do
   let(:dog_class) do
@@ -72,6 +73,21 @@ RSpec.describe ValueSemantics do
         dog = Doggums.new(name: 'Fido', trained?: true)
         expect(dog.inspect).to eq('#<Doggums name="Fido" trained?=true>')
       end
+    end
+
+    it "has nice pp output" do
+      output = StringIO.new
+
+      with_constant(:Doggums, dog_class) do
+        dog = Doggums.new(name: "Fido", trained?: true)
+        PP.pp(dog, output, 3)
+      end
+
+      expect(output.string).to eq(<<~END_PP)
+        #<Doggums
+         name="Fido"
+         trained?=true>
+      END_PP
     end
 
     it "has a human-friendly module name" do

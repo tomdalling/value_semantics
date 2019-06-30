@@ -139,6 +139,16 @@ module ValueSemantics
 
       "#<#{self.class} #{attrs}>"
     end
+
+    def pretty_print(pp)
+      pp.object_group(self) do
+        to_h.each do |attr, value|
+          pp.breakable
+          pp.text("#{attr}=")
+          pp.pp(value)
+        end
+      end
+    end
   end
 
   #
