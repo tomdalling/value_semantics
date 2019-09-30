@@ -404,9 +404,8 @@ RSpec.describe ValueSemantics do
 
     it "returns a value class, like Struct.new does" do
       expect(subject).to be_a(Class)
-      expect(subject).not_to be(Class)
       expect(subject.value_semantics).to be_a(ValueSemantics::Recipe)
-      expect(subject.value_semantics.attributes.count).to eq(2)
+      expect(subject.new(attr2: nil)).to be_a(subject)
     end
 
     it "makes instances that work like normal ValueSemantics objects" do
