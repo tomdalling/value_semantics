@@ -304,6 +304,21 @@ For example, the default value could be a string,
 which would then be coerced into an `IPAddr` object.
 
 
+## ValueSemantics::Struct
+
+This is a convenience for making a new class and including ValueSemantics in
+one step, similar to how `Struct` works from the Ruby standard library. For
+example:
+
+```ruby
+Cat = ValueSemantics::Struct.new do
+  name String, default: "Mittens"
+end
+
+Cat.new.name #=> "Mittens"
+```
+
+
 ## Installation
 
 Add this line to your application's Gemfile:
