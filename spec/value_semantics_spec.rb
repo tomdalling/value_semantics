@@ -376,7 +376,7 @@ RSpec.describe ValueSemantics do
   end
 
   describe ValueSemantics::Attribute do
-    subject { ValueSemantics::Attribute.new(name: :whatever) }
+    subject { described_class.new(name: :whatever) }
 
     it 'raises if attempting to use missing default attribute' do
       expect { subject.default_generator.call }.to raise_error(
