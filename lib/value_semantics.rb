@@ -294,13 +294,13 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
-    def def_attr(*args)
-      __attributes << Attribute.define(*args)
+    def def_attr(*args, **kwargs)
+      __attributes << Attribute.define(*args, **kwargs)
     end
 
-    def method_missing(name, *args)
+    def method_missing(name, *args, **kwargs)
       if respond_to_missing?(name)
-        def_attr(name, *args)
+        def_attr(name, *args, **kwargs)
       else
         super
       end
