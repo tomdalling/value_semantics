@@ -1,4 +1,3 @@
-require "spec_helper"
 require "pp"
 
 RSpec.describe ValueSemantics do
@@ -419,4 +418,3 @@ RSpec.describe ValueSemantics do
     expect(ValueSemantics::VERSION).not_to be nil
   end
 end
-

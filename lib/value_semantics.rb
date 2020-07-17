@@ -149,6 +149,10 @@ module ValueSemantics
         end
       end
     end
+
+    def deconstruct_keys(_)
+      to_h
+    end
   end
 
   #

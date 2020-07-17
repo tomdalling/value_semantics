@@ -1,2 +1,6 @@
+--require spec_helper
 --format documentation
 --color
+<% if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.7') %>
+  --exclude-pattern spec/pattern_matching_spec.rb
+<% end %>
