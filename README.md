@@ -101,6 +101,15 @@ other_tom = Person.new(name: 'Tom', age: 31)
 tom == other_tom  #=> true
 tom.eql?(other_tom)  #=> true
 tom.hash == other_tom.hash  #=> true
+
+
+#
+# Ruby 2.7+ pattern matching
+#
+case tom
+in { name: "Tom", age: }
+  puts age  # outputs: 31
+end
 ```
 
 
