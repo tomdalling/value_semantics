@@ -7,9 +7,12 @@ MUTANT_PATTERN=${1:-ValueSemantics*}
 if [[ "${MUTATION_TEST:-true}" == "false" ]] ; then
     bundle exec rspec
 else
+    # Excluding ValueSemantics::Struct.new because it causes unfixable failure
+    # I don't want to deal with
     bundle exec mutant \
         --include lib \
         --require value_semantics \
-        --use rspec "$MUTANT_PATTERN" \
-        --ignore-subject "ValueSemantics::Struct.new" # causes unfixable failure I don't want to deal with
+        --use rspec \
+        --ignore-subject "ValueSemantics::Struct.new" \
+        "$MUTANT_PATTERN"
 fi
