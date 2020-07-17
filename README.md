@@ -1,6 +1,6 @@
 [![Gem Version](https://badge.fury.io/rb/value_semantics.svg)](https://badge.fury.io/rb/value_semantics)
 [![Build Status](https://travis-ci.org/tomdalling/value_semantics.svg?branch=master)](https://travis-ci.org/tomdalling/value_semantics)
-![Mutation Coverage](https://img.shields.io/badge/mutation%20coverage-100%25-brightgreen.svg)
+![Mutation Coverage](https://img.shields.io/badge/mutation%20coverage-to%20the%20MAX-brightgreen.svg)
 
 ValueSemantics
 ==============
