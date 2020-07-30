@@ -108,10 +108,10 @@ RSpec.describe ValueSemantics do
     end
 
     it "can not be constructed with a value that is not 'hash-like'" do
-      expect { dog_class.new([1, 2, 3]) }.to raise_error(
+      expect { dog_class.new(['Fido', true]) }.to raise_error(
         TypeError,
         "`Doggums` could not be instantiated from a `Array` due to " +
-        "TypeError: wrong element type Integer at 0 (expected array)",
+        "TypeError: wrong element type String at 0 (expected array)",
       )
     end
   end
