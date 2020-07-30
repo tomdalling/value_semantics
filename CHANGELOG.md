@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Value objects can be instantiated from any object that responds to `#to_h`.
+  Previously attributes were required to be given as a `Hash`.
 ### Changed
 - Improved exception messages for easier development experience
-
 - Raises `ValueSemantics::InvalidValue` instead of `ArgumentError` when
   attempting to initialize with an invalid value. `ValueSemantics::InvalidValue`
   is a subclass of `ArgumentError`, so it should be backwards compatible.

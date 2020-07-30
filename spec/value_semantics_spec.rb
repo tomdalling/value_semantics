@@ -83,6 +83,11 @@ RSpec.describe ValueSemantics do
       expect(vs.attributes).to be_frozen
       expect(vs.attributes.first).to be_frozen
     end
+
+    it "can be initialized with any value that responds to #to_h" do
+      dog = Doggums.new([[:name, 'Rex'], [:trained?, true]])
+      expect(dog).to have_attributes(name: 'Rex', trained?: true)
+    end
   end
 
   describe 'errors' do
@@ -99,6 +104,14 @@ RSpec.describe ValueSemantics do
       }.to raise_error(
         ValueSemantics::UnrecognizedAttributes,
         "`Doggums` does not define attributes: `:meow`, `:moo`",
+      )
+    end
+
+    it "can not be constructed with a value that is not 'hash-like'" do
+      expect { dog_class.new([1, 2, 3]) }.to raise_error(
+        TypeError,
+        "`Doggums` could not be instantiated from a `Array` due to " +
+        "TypeError: wrong element type Integer at 0 (expected array)",
       )
     end
   end

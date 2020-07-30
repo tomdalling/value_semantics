@@ -65,15 +65,31 @@ module ValueSemantics
   #
   module InstanceMethods
     #
-    # Creates a value object based on a Hash of attributes
+    # Creates a value object based on a hash of attributes
     #
-    # @param given_attrs [Hash] a hash of attributes, with symbols for keys
-    # @raise [UnrecognizedAttributes] if given_attrs contains keys that are not attributes
-    # @raise [MissingAttributes] if given_attrs is missing any attributes that do not have defaults
+    # @param attributes [#to_h] A hash of attribute values by name. Typically a
+    #   `Hash`, but can be any object that responds to `#to_h`.
+    #
+    # @raise [UnrecognizedAttributes] if given_attrs contains keys that are not
+    #   attributes
+    # @raise [MissingAttributes] if given_attrs is missing any attributes that
+    #   do not have defaults
     # @raise [InvalidValue] if any attribute values do no pass their validators
+    # @raise [TypeError] if the attributes can not be converted into a `Hash`
+    #   using `#to_h`
     #
-    def initialize(given_attrs = {})
-      remaining_attrs = given_attrs.dup
+    def initialize(attributes = nil)
+      attributes_hash = begin
+        attributes.to_h
+      rescue StandardError => ex
+        raise(
+          TypeError,
+          "`#{self.class}` could not be instantiated from a `#{attributes.class}`" +
+          " due to #{ex.class}: #{ex}"
+        )
+      end
+
+      remaining_attrs = attributes_hash.dup
 
       self.class.value_semantics.attributes.each do |attr|
         key, value = attr.determine_from!(remaining_attrs, self.class)
