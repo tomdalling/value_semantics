@@ -45,6 +45,39 @@ module ValueSemantics
   end
 
   #
+  # Makes the `.value_semantics` convenience method available to all classes
+  #
+  # `.value_semantics` is a shortcut for `include ValueSemantics.for_attributes`.
+  # Instead of:
+  #
+  #     class Person
+  #       include ValueSemantics.for_attributes {
+  #         name String
+  #       }
+  #     end
+  #
+  # You can just write:
+  #
+  #     class Person
+  #       value_semantics do
+  #         name String
+  #       end
+  #     end
+  #
+  # Alternatively, you can `require 'value_semantics/monkey_patched'`, which
+  # will call this method automatically.
+  #
+  def self.monkey_patch!
+    Class.class_eval do
+      # @!visibility private
+      def value_semantics(&block)
+        include ValueSemantics.for_attributes(&block)
+      end
+      private :value_semantics
+    end
+  end
+
+  #
   # All the class methods available on ValueSemantics classes
   #
   # When a ValueSemantics module is included into a class,
@@ -56,6 +89,11 @@ module ValueSemantics
     #                  was included into this class.
     #
     def value_semantics
+      if block_given?
+        # caller is trying to use the monkey-patched Class method
+        raise "`#{self}` has already included ValueSemantics"
+      end
+
       self::VALUE_SEMANTICS_RECIPE__
     end
   end

@@ -118,6 +118,41 @@ end
 ```
 
 
+Convenience (Monkey Patch)
+--------------------------
+
+There is a shorter way to define value attributes:
+
+```ruby
+  class Person
+    value_semantics do
+      name String
+      age Integer
+    end
+  end
+```
+
+**This is disabled by default**, to avoid polluting every class with an extra
+class method.
+
+This convenience method can be enabled in two ways:
+
+ 1. Add a `require:` option to your `Gemfile` like this:
+
+    ```ruby
+    gem 'value_semantics', '~> 3.3', require: 'value_semantics/monkey_patched'
+    ```
+
+ 2. Alternatively, you can call `ValueSemantics.monkey_patch!` somewhere early
+    in the boot sequence of your code -- at the top of your script, for example,
+    or `config/boot.rb` if it's a Rails project.
+
+    ```ruby
+    require 'value_semantics'
+    ValueSemantics.monkey_patch!
+    ```
+
+
 Defaults
 --------
 

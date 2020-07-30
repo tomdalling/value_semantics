@@ -9,8 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Value objects can be instantiated from any object that responds to `#to_h`.
   Previously attributes were required to be given as a `Hash`.
+
+- Added monkey patching for super-convenient attribute definitions. This is not
+  available by default, and needs to be explicitly enabled with
+  `ValueSemantics.monkey_patch!` or `require 'value_semantics/monkey_patched'`.
+
 ### Changed
 - Improved exception messages for easier development experience
+
 - Raises `ValueSemantics::InvalidValue` instead of `ArgumentError` when
   attempting to initialize with an invalid value. `ValueSemantics::InvalidValue`
   is a subclass of `ArgumentError`, so it should be backwards compatible.
