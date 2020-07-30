@@ -159,13 +159,13 @@ end
 
 Person.new(name: 'Tom', ...)  # works
 Person.new(name: 5, ...)
-#=> ArgumentError:
-#=>     Value for attribute 'name' is not valid: 5
+#=> ValueSemantics::InvalidValue:
+#=>     Attribute `Person#name` is invalid: 5
 
 Person.new(birthday: "1970-01-01", ...)  # works
 Person.new(birthday: "hello", ...)
-#=> ArgumentError:
-#=>     Value for attribute 'birthday' is not valid: "hello"
+#=> ValueSemantics::InvalidValue:
+#=>     Attribute 'Person#birthday' is invalid: "hello"
 ```
 
 
@@ -220,8 +220,8 @@ end
 
 Person.new(age: 9)  # works
 Person.new(age: 8)
-#=> ArgumentError:
-#=>     Value for attribute 'age' is not valid: 8
+#=> ValueSemantics::InvalidValue:
+#=>     Attribute 'Person#age' is invalid: 8
 ```
 
 Default attribute values also pass through validation.
@@ -262,8 +262,8 @@ Server.new(address: IPAddr.new('127.0.0.1'))
 #=> #<Server address=#<IPAddr: IPv4:127.0.0.1/255.255.255.255>>
 
 Server.new(address: 42)
-#=> ArgumentError:
-#=>     Value for attribute 'address' is not valid: 42
+#=> ValueSemantics::InvalidValue:
+#=>     Attribute 'Server#address' is invalid: 42
 ```
 
 You can also use any callable object as a coercer.

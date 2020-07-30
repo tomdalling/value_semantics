@@ -3,6 +3,7 @@ module ValueSemantics
   class UnrecognizedAttributes < Error; end
   class NoDefaultValue < Error; end
   class MissingAttributes < Error; end
+  class InvalidValue < ArgumentError; end
 
   NOT_SPECIFIED = Object.new.freeze
 
@@ -69,7 +70,7 @@ module ValueSemantics
     # @param given_attrs [Hash] a hash of attributes, with symbols for keys
     # @raise [UnrecognizedAttributes] if given_attrs contains keys that are not attributes
     # @raise [MissingAttributes] if given_attrs is missing any attributes that do not have defaults
-    # @raise [ArgumentError] if any attribute values do no pass their validators
+    # @raise [InvalidValue] if any attribute values do no pass their validators
     #
     def initialize(given_attrs = {})
       remaining_attrs = given_attrs.dup
@@ -81,8 +82,14 @@ module ValueSemantics
       end
 
       unless remaining_attrs.empty?
-        unrecognised = remaining_attrs.keys.map(&:inspect).join(', ')
-        raise UnrecognizedAttributes, "Unrecognized attributes: #{unrecognised}"
+        raise(
+          UnrecognizedAttributes,
+          "`#{self.class}` does not define attributes: " +
+            remaining_attrs
+              .keys
+              .map { |k| '`' + k.inspect + '`' }
+              .join(', ')
+        )
       end
     end
 
@@ -183,7 +190,7 @@ module ValueSemantics
                     coerce: nil)
       generator = begin
         if default_generator && !default.equal?(NOT_SPECIFIED)
-          raise ArgumentError, "Attribute '#{name}' can not have both a :default and a :default_generator"
+          raise ArgumentError, "Attribute `#{name}` can not have both a `:default` and a `:default_generator`"
         elsif default_generator
           default_generator
         elsif !default.equal?(NOT_SPECIFIED)
@@ -204,7 +211,7 @@ module ValueSemantics
     def determine_from!(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
         if default_generator.equal?(NO_DEFAULT_GENERATOR)
-          raise MissingAttributes, "Value missing for attribute '#{name}'"
+          raise MissingAttributes, "Attribute `#{klass}\##{name}` has no value"
         else
           default_generator.call
         end
@@ -215,7 +222,7 @@ module ValueSemantics
       if validate?(coerced_value)
         [name, coerced_value]
       else
-        raise ArgumentError, "Value for attribute '#{name}' is not valid: #{coerced_value.inspect}"
+        raise InvalidValue, "Attribute `#{klass}\##{name}` is invalid: #{coerced_value.inspect}"
       end
     end
 

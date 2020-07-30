@@ -89,7 +89,7 @@ RSpec.describe ValueSemantics do
     it "can not be constructed with attributes missing" do
       expect { dog = Doggums.new(name: 'Fido') }.to raise_error(
         ValueSemantics::MissingAttributes,
-        "Value missing for attribute 'trained?'",
+        "Attribute `Doggums#trained?` has no value",
       )
     end
 
@@ -98,7 +98,7 @@ RSpec.describe ValueSemantics do
         Doggums.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
       }.to raise_error(
         ValueSemantics::UnrecognizedAttributes,
-        "Unrecognized attributes: :meow, :moo",
+        "`Doggums` does not define attributes: `:meow`, `:moo`",
       )
     end
   end
@@ -139,7 +139,10 @@ RSpec.describe ValueSemantics do
         ValueSemantics.for_attributes {
           both default: 5, default_generator: ->{ rand }
         }
-      end.to raise_error(ArgumentError, "Attribute 'both' can not have both a :default and a :default_generator")
+      end.to raise_error(
+        ArgumentError,
+        "Attribute `both` can not have both a `:default` and a `:default_generator`",
+      )
     end
   end
 
@@ -161,8 +164,10 @@ RSpec.describe ValueSemantics do
     end
 
     it "rejects values that fail the validator" do
-      expect{ Birb.new(wings: 'smooth feet') }.to raise_error(ArgumentError,
-        "Value for attribute 'wings' is not valid: \"smooth feet\"")
+      expect{ Birb.new(wings: 'smooth feet') }.to raise_error(
+        ValueSemantics::InvalidValue,
+        'Attribute `Birb#wings` is invalid: "smooth feet"',
+      )
     end
   end
 
@@ -253,7 +258,10 @@ RSpec.describe ValueSemantics do
     it "performs coercion before validation" do
       expect {
         CoercionTest.new(double_it: 6)
-      }.to raise_error(ArgumentError, "Value for attribute 'double_it' is not valid: 12")
+      }.to raise_error(
+        ValueSemantics::InvalidValue,
+        "Attribute `CoercionTest#double_it` is invalid: 12",
+      )
     end
   end
 
