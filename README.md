@@ -19,6 +19,7 @@ See:
 
  - The [announcement blog post][blog post] for some of the rationale behind the gem
  - [RubyTapas episode #584][rubytapas] for an example usage scenario
+ - The [API documentation](https://rubydoc.info/gems/value_semantics)
  - Some [discussion on Reddit][reddit]
 
 [blog post]: https://www.rubypigeon.com/posts/value-semantics-gem-for-making-value-classes/
