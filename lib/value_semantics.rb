@@ -113,19 +113,19 @@ module ValueSemantics
     # @raise [MissingAttributes] if given_attrs is missing any attributes that
     #   do not have defaults
     # @raise [InvalidValue] if any attribute values do no pass their validators
-    # @raise [TypeError] if the attributes can not be converted into a `Hash`
-    #   using `#to_h`
+    # @raise [TypeError] if the argument does not respond to `#to_h`
     #
     def initialize(attributes = nil)
-      attributes_hash = begin
-        attributes.to_h
-      rescue StandardError => ex
-        raise(
-          TypeError,
-          "`#{self.class}` could not be instantiated from a `#{attributes.class}`" +
-          " due to #{ex.class}: #{ex}"
-        )
-      end
+      attributes_hash =
+        if attributes.respond_to?(:to_h)
+          attributes.to_h
+        else
+          raise TypeError, <<-END_MESSAGE.strip.gsub(/\s+/, ' ')
+            Can not initialize a `#{self.class}` with a `#{attributes.class}`
+            object. This argument is typically a `Hash` of attributes, but can
+            be any object that responds to `#to_h`.
+          END_MESSAGE
+        end
 
       remaining_attrs = attributes_hash.dup
 

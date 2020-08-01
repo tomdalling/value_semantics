@@ -15,22 +15,69 @@ RSpec.describe ValueSemantics do
     end
   end
 
-  describe 'basic usage' do
-    it "has a keyword constructor, attr readers, and ivars" do
+  describe 'initialization' do
+    it "supports keyword arguments" do
       dog = Doggums.new(name: 'Fido', trained?: true)
-
-      expect(dog).to have_attributes(
-        name: 'Fido',
-        trained?: true,
-      )
-
-      expect(dog.instance_variable_get(:@name)).to eq('Fido')
-      expect(dog.instance_variable_get(:@trained)).to eq(true)
+      expect(dog).to have_attributes(name: 'Fido', trained?: true)
     end
 
-    it "does not mutate constructor params" do
-      params = { name: 'Fido', trained?: true }
-      expect { Doggums.new(params) }.not_to change { params }
+    it "supports Hash arguments" do
+      dog = Doggums.new({ name: 'Rufus', trained?: true })
+      expect(dog).to have_attributes(name: 'Rufus', trained?: true)
+    end
+
+    it "supports any value that responds to #to_h" do
+      arg = double(to_h: { name: 'Rex', trained?: true })
+      dog = Doggums.new(arg)
+      expect(dog).to have_attributes(name: 'Rex', trained?: true)
+    end
+
+    it "does not mutate hash arguments" do
+      attrs = { name: 'Kipper', trained?: true }
+      expect { Doggums.new(attrs) }.not_to change { attrs }
+    end
+
+    it "can not be constructed with attributes missing" do
+      expect { dog = Doggums.new(name: 'Fido') }.to raise_error(
+        ValueSemantics::MissingAttributes,
+        "Attribute `Doggums#trained?` has no value",
+      )
+    end
+
+    it "can not be constructed with undefined attributes" do
+      expect {
+        Doggums.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
+      }.to raise_error(
+        ValueSemantics::UnrecognizedAttributes,
+        "`Doggums` does not define attributes: `:meow`, `:moo`",
+      )
+    end
+
+    it "can not be constructed with an object that does not respond to #to_h" do
+      expect { dog_class.new(double) }.to raise_error(TypeError,
+        <<~END_MESSAGE.strip.split.join(' ')
+          Can not initialize a `Doggums` with a `RSpec::Mocks::Double` object.
+          This argument is typically a `Hash` of attributes, but can be any
+          object that responds to `#to_h`.
+        END_MESSAGE
+      )
+    end
+
+    it "does not intercept errors raised from calling #to_h" do
+      arg = double
+      allow(arg).to receive(:to_h).and_raise("this implementation sucks")
+
+      expect { dog_class.new(arg) }.to raise_error("this implementation sucks")
+    end
+  end
+
+  describe 'basic usage' do
+    it "has attr readers and ivars" do
+      dog = Doggums.new(name: 'Fido', trained?: true)
+
+      expect(dog).to have_attributes(name: 'Fido', trained?: true)
+      expect(dog.instance_variable_get(:@name)).to eq('Fido')
+      expect(dog.instance_variable_get(:@trained)).to eq(true)
     end
 
     it "does not define attr writers" do
@@ -82,37 +129,6 @@ RSpec.describe ValueSemantics do
       expect(vs).to be_frozen
       expect(vs.attributes).to be_frozen
       expect(vs.attributes.first).to be_frozen
-    end
-
-    it "can be initialized with any value that responds to #to_h" do
-      dog = Doggums.new([[:name, 'Rex'], [:trained?, true]])
-      expect(dog).to have_attributes(name: 'Rex', trained?: true)
-    end
-  end
-
-  describe 'errors' do
-    it "can not be constructed with attributes missing" do
-      expect { dog = Doggums.new(name: 'Fido') }.to raise_error(
-        ValueSemantics::MissingAttributes,
-        "Attribute `Doggums#trained?` has no value",
-      )
-    end
-
-    it "can not be constructed with undefined attributes" do
-      expect {
-        Doggums.new(name: 'Fido', trained?: true, meow: 'cattt', moo: 'cowww')
-      }.to raise_error(
-        ValueSemantics::UnrecognizedAttributes,
-        "`Doggums` does not define attributes: `:meow`, `:moo`",
-      )
-    end
-
-    it "can not be constructed with a value that is not 'hash-like'" do
-      expect { dog_class.new(['Fido', true]) }.to raise_error(
-        TypeError,
-        "`Doggums` could not be instantiated from a `Array` due to " +
-        "TypeError: wrong element type String at 0 (expected array)",
-      )
     end
   end
 
