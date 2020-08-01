@@ -362,6 +362,24 @@ Cat.new.name #=> "Mittens"
 ```
 
 
+## Known Issues
+
+Some valid attribute names result in invalid Ruby syntax when using the DSL.
+In these situations, you can use the DSL method `def_attr` instead.
+
+For example, if you want an attribute named `then`:
+
+```ruby
+include ValueSemantics.for_attributes {
+  # !!! SyntaxError: syntax error, unexpected `then'
+  then String, default: "whatever"
+
+  # This will work:
+  def_attr :then, String, default: "whatever"
+}
+```
+
+
 ## Installation
 
 Add this line to your application's Gemfile:

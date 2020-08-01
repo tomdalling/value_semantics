@@ -359,6 +359,25 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
+    #
+    # Defines one attribute.
+    #
+    # This is the method that gets called under the hood, when defining
+    # attributes the typical `#method_missing` way.
+    #
+    # You can use this method directly if your attribute name results in invalid
+    # Ruby syntax. For example, if you want an attribute named `then`, you
+    # can do:
+    #
+    #     include ValueSemantics.for_attributes {
+    #       # !!! SyntaxError: syntax error, unexpected `then'
+    #       then String, default: "whatever"
+    #
+    #       # This will work:
+    #       def_attr :then, String, default: "whatever"
+    #     }
+    #
+    #
     def def_attr(*args, **kwargs)
       __attributes << Attribute.define(*args, **kwargs)
     end
