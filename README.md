@@ -76,43 +76,31 @@ end
 tom = Person.new(name: 'Tom')
 
 
-#
 # Read-only attributes
-#
 tom.name  #=> "Tom"
 tom.age  #=> 31
 
 
-#
 # Convert to Hash
-#
 tom.to_h  #=> { :name => "Tom", :age => 31 }
 
 
-#
 # Non-destructive updates
-#
 old_tom = tom.with(age: 99)
-
 old_tom  #=> #<Person name="Tom" age=99>
 tom      #=> #<Person name="Tom" age=31> (unchanged)
 
 
-#
 # Equality
-#
 other_tom = Person.new(name: 'Tom', age: 31)
-
 tom == other_tom  #=> true
 tom.eql?(other_tom)  #=> true
 tom.hash == other_tom.hash  #=> true
 
 
-#
 # Ruby 2.7+ pattern matching
-#
 case tom
-in { name: "Tom", age: }
+in name: "Tom", age:
   puts age  # outputs: 31
 end
 ```
