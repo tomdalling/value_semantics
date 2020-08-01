@@ -261,46 +261,48 @@ Coercion
 Coercion allows non-standard or "convenience" values to be converted into
 proper, valid values, where possible.
 
-For example, an object with an `IPAddr` attribute may allow string values,
-which are then coerced into `IPAddr` objects.
+For example, an object with an `Pathname` attribute may allow string values,
+which are then coerced into `Pathname` objects.
 
 Using the option `coerce: true`,
 coercion happens through a custom class method called `coerce_#{attr}`,
 which takes the raw value as an argument, and returns the coerced value.
 
 ```ruby
-class Server
+require 'pathname'
+
+class Document
   include ValueSemantics.for_attributes {
-    address IPAddr, coerce: true
+    path Pathname, coerce: true
   }
 
-  def self.coerce_address(value)
+  def self.coerce_path(value)
     if value.is_a?(String)
-      IPAddr.new(value)
+      Pathname.new(value)
     else
       value
     end
   end
 end
 
-Server.new(address: '127.0.0.1')
-#=> #<Server address=#<IPAddr: IPv4:127.0.0.1/255.255.255.255>>
+Document.new(path: '~/Documents/whatever.doc')
+#=> #<Document path=#<Pathname:~/Documents/whatever.doc>>
 
-Server.new(address: IPAddr.new('127.0.0.1'))
-#=> #<Server address=#<IPAddr: IPv4:127.0.0.1/255.255.255.255>>
+Document.new(path: Pathname.new('~/Documents/whatever.doc'))
+#=> #<Document path=#<Pathname:~/Documents/whatever.doc>>
 
-Server.new(address: 42)
+Document.new(path: 42)
 #=> ValueSemantics::InvalidValue:
-#=>     Attribute 'Server#address' is invalid: 42
+#=>     Attribute 'Document#path' is invalid: 42
 ```
 
 You can also use any callable object as a coercer.
 That means, you could use a lambda:
 
 ```ruby
-class Server
+class Document
   include ValueSemantics.for_attributes {
-    address IPAddr, coerce: ->(value) { IPAddr.new(value) }
+    path Pathname, coerce: ->(value) { Pathname.new(value) }
   }
 end
 ```
@@ -308,25 +310,25 @@ end
 Or a custom class:
 
 ```ruby
-class MyAddressCoercer
+class MyPathCoercer
   def call(value)
-    IPAddr.new(value)
+    Pathname.new(value)
   end
 end
 
-class Server
+class Document
   include ValueSemantics.for_attributes {
-    address IPAddr, coerce: MyAddressCoercer.new
+    path Pathname, coerce: MyPathCoercer.new
   }
 end
 ```
 
-Or reuse an existing class method:
+Or reuse an existing method:
 
 ```ruby
-class Server
+class Document
   include ValueSemantics.for_attributes {
-    address IPAddr, coerce: IPAddr.method(:new)
+    path Pathname, coerce: Pathname.method(:new)
   }
 end
 ```
@@ -338,7 +340,7 @@ Another option is to raise an error within the coercion method.
 
 Default attribute values also pass through coercion.
 For example, the default value could be a string,
-which would then be coerced into an `IPAddr` object.
+which would then be coerced into an `Pathname` object.
 
 
 ## ValueSemantics::Struct
