@@ -390,7 +390,15 @@ Or install it yourself as:
 Bug reports and pull requests are welcome on GitHub at:
 https://github.com/tomdalling/value_semantics
 
-Keep in mind that this gem aims to be as close to 100% backwards compatible as possible.
+Keep in mind that this gem aims to be as close to 100% backwards compatible as
+possible.
+
+I'm happy to accept PRs that:
+
+ - Improve error messages for a better developer experience, especially those
+   that support a TDD workflow.
+ - Add new, helpful validators
+ - Implement automatic freezing of value objects (must be opt-in)
 
 ## License
 
