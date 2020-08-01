@@ -55,9 +55,13 @@ Person.new(birthday: nil)
 #=> #<Person name="Anon Emous" birthday=nil>
 ```
 
-The curly bracket syntax used with `ValueSemantics.for_attributes` is, unfortunately,
-mandatory due to Ruby's precedence rules.
-The `do`/`end` syntax will not work unless you surround the whole thing with parenthesis.
+Value objects are typically initialized with keyword arguments or a `Hash`, but
+will accept any object that responds to `#to_h`.
+
+The curly bracket syntax used with `ValueSemantics.for_attributes` is,
+unfortunately, mandatory due to Ruby's precedence rules. For a shorter
+alternative method that works better with `do`/`end`, see [Convenience (Monkey
+Patch)](#convenience-monkey-patch) below.
 
 
 Using Value Objects
