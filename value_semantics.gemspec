@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler", ">= 1.15"
   spec.add_development_dependency "rspec", "~> 3.7"
-  spec.add_development_dependency "super_diff", "~> 0.5"
+  spec.add_development_dependency "super_diff"
   spec.add_development_dependency "mutant-rspec"
   spec.add_development_dependency "yard"
   spec.add_development_dependency "byebug"
