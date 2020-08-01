@@ -45,10 +45,9 @@ module ValueSemantics
   end
 
   #
-  # Makes the `.value_semantics` convenience method available to all classes
+  # Makes the +.value_semantics+ convenience method available to all classes
   #
-  # `.value_semantics` is a shortcut for `include ValueSemantics.for_attributes`.
-  # Instead of:
+  # +.value_semantics+ is a shortcut for {.for_attributes}. Instead of:
   #
   #     class Person
   #       include ValueSemantics.for_attributes {
@@ -64,7 +63,7 @@ module ValueSemantics
   #       end
   #     end
   #
-  # Alternatively, you can `require 'value_semantics/monkey_patched'`, which
+  # Alternatively, you can +require 'value_semantics/monkey_patched'+, which
   # will call this method automatically.
   #
   def self.monkey_patch!
@@ -106,14 +105,14 @@ module ValueSemantics
     # Creates a value object based on a hash of attributes
     #
     # @param attributes [#to_h] A hash of attribute values by name. Typically a
-    #   `Hash`, but can be any object that responds to `#to_h`.
+    #   +Hash+, but can be any object that responds to +#to_h+.
     #
     # @raise [UnrecognizedAttributes] if given_attrs contains keys that are not
     #   attributes
     # @raise [MissingAttributes] if given_attrs is missing any attributes that
     #   do not have defaults
     # @raise [InvalidValue] if any attribute values do no pass their validators
-    # @raise [TypeError] if the argument does not respond to `#to_h`
+    # @raise [TypeError] if the argument does not respond to +#to_h+
     #
     def initialize(attributes = nil)
       attributes_hash =
@@ -365,17 +364,18 @@ module ValueSemantics
     # Defines one attribute.
     #
     # This is the method that gets called under the hood, when defining
-    # attributes the typical `#method_missing` way.
+    # attributes the typical +#method_missing+ way.
     #
     # You can use this method directly if your attribute name results in invalid
-    # Ruby syntax. For example, if you want an attribute named `then`, you
+    # Ruby syntax. For example, if you want an attribute named +then+, you
     # can do:
     #
     #     include ValueSemantics.for_attributes {
-    #       # !!! SyntaxError: syntax error, unexpected `then'
+    #       # Does not work:
     #       then String, default: "whatever"
+    #       #=> SyntaxError: syntax error, unexpected `then'
     #
-    #       # This will work:
+    #       # Works:
     #       def_attr :then, String, default: "whatever"
     #     }
     #
