@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+
+# the filename is in the output, so do a little dance to make it say "README.md"
+cp README.eceval.md README.md
+
+bundle exec eceval \
+  --load_path=lib/ \
+  --require=value_semantics,date \
+  README.md \
+  > tmp.md
+
+mv tmp.md README.md

@@ -47,13 +47,13 @@ class Person
 end
 
 Person.new(name: "Tom", birthday: "2020-12-25")
-#=> #<Person name="Tom" birthday=#<Date: 2020-12-25 ((2459209j,0s,0n),+0s,2299161j)>>
+#=>
 
 Person.new(birthday: Date.today)
-#=> #<Person name="Anon Emous" birthday=#<Date: 2020-08-04 ((2459066j,0s,0n),+0s,2299161j)>>
+#=>
 
 Person.new(birthday: nil)
-#=> #<Person name="Anon Emous" birthday=nil>
+#=>
 ```
 
 Value objects are typically initialized with keyword arguments or a `Hash`, but
@@ -82,28 +82,28 @@ tom = Person.new(name: 'Tom')
 
 
 # Read-only attributes
-tom.name  #=> "Tom"
-tom.age  #=> 31
+tom.name  #=>
+tom.age  #=>
 
 # Convert to Hash
-tom.to_h  #=> {:name=>"Tom", :age=>31}
+tom.to_h  #=>
 
 # Non-destructive updates
-tom.with(age: 99) #=> #<Person name="Tom" age=99>
-tom # (unchanged) #=> #<Person name="Tom" age=31>
+tom.with(age: 99) #=>
+tom # (unchanged) #=>
 
 # Equality
 other_tom = Person.new(name: 'Tom', age: 31)
-tom == other_tom  #=> true
-tom.eql?(other_tom)  #=> true
-tom.hash == other_tom.hash  #=> true
+tom == other_tom  #=>
+tom.eql?(other_tom)  #=>
+tom.hash == other_tom.hash  #=>
 
 # Ruby 2.7+ pattern matching
 case tom
 in name: "Tom", age:
   puts age
 end
-# outputs: 31
+# outputs:
 ```
 
 
@@ -159,7 +159,7 @@ class Cat
 end
 
 Cat.new
-#=> #<Cat paws=4 born_at=2020-08-04 00:16:35.15632 +1000>
+#=>
 ```
 
 The `default` option is a single value.
@@ -190,11 +190,11 @@ end
 
 Person.new(name: 'Tom', birthday: '2000-01-01')  # works
 Person.new(name: 5,     birthday: '2000-01-01')
-#=> !!! ValueSemantics::InvalidValue: Attribute `Person#name` is invalid: 5
+#=> !!!
 
 Person.new(name: 'Tom', birthday: "1970-01-01")  # works
 Person.new(name: 'Tom', birthday: "hello")
-#=> !!! ValueSemantics::InvalidValue: Attribute `Person#birthday` is invalid: "hello"
+#=> !!!
 ```
 
 
@@ -226,7 +226,7 @@ LightSwitch.new(
   color: "#FFAABB",
   wierd_attr: [true, false, true, true],
 )
-#=> #<LightSwitch on?=true light_ids=[11, 12, 13] color="#FFAABB" wierd_attr=[true, false, true, true]>
+#=>
 ```
 
 
@@ -250,10 +250,10 @@ class Server
 end
 
 Server.new(address: '127.0.0.1')
-#=> #<Server address="127.0.0.1">
+#=>
 
 Server.new(address: '127.0.0.999')
-#=> !!! ValueSemantics::InvalidValue: Attribute `Server#address` is invalid: "127.0.0.999"
+#=> !!!
 ```
 
 Default attribute values also pass through validation.
@@ -290,13 +290,13 @@ class Document
 end
 
 Document.new(path: '~/Documents/whatever.doc')
-#=> #<Document path=#<Pathname:~/Documents/whatever.doc>>
+#=>
 
 Document.new(path: Pathname.new('~/Documents/whatever.doc'))
-#=> #<Document path=#<Pathname:~/Documents/whatever.doc>>
+#=>
 
 Document.new(path: 42)
-#=> !!! ValueSemantics::InvalidValue: Attribute `Document#path` is invalid: 42
+#=> !!!
 ```
 
 You can also use any callable object as a coercer.
@@ -357,7 +357,7 @@ Pigeon = ValueSemantics::Struct.new do
   name String, default: "Jannie"
 end
 
-Pigeon.new.name #=> "Jannie"
+Pigeon.new.name #=>
 ```
 
 
@@ -376,9 +376,7 @@ class Conditional
     else String
   }
 end
-#=> !!! SyntaxError: README.md:375: syntax error, unexpected `then'
-#=*         then String
-#=*         ^~~~
+#=> !!!
 
 
 # This will work
