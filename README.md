@@ -350,6 +350,34 @@ For example, the default value could be a string,
 which would then be coerced into an `Pathname` object.
 
 
+## Nesting
+
+It is fairly common to nest value objects inside each other. This
+works as expected, but coercion is not automatic. For nested coercion,
+use the `.coercer` class method that ValueSemantics provides.
+
+```ruby
+class CrabClaw
+  include ValueSemantics.for_attributes {
+    size Either(:big, :small)
+  }
+end
+
+class Crab
+  include ValueSemantics.for_attributes {
+    left_claw CrabClaw, coerce: CrabClaw.coercer
+    right_claw CrabClaw, coerce: CrabClaw.coercer
+  }
+end
+
+Crab.new(
+  left_claw: { size: :small },
+  right_claw: { size: :big },
+)
+#=> #<Crab left_claw=#<CrabClaw size=:small> right_claw=#<CrabClaw size=:big>>
+```
+
+
 ## ValueSemantics::Struct
 
 This is a convenience for making a new class and including ValueSemantics in

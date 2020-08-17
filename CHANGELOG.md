@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Square bracket attr reader like `person[:name]`
 - `HashOf` built-in validator, similar to `ArrayOf`
+- `.coercer` class method, to help when composing value objects
 
 ## [3.4.0] - 2020-08-01
 ### Added

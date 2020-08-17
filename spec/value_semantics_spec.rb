@@ -302,6 +302,13 @@ RSpec.describe ValueSemantics do
         "Attribute `CoercionTest#double_it` is invalid: 12",
       )
     end
+
+    it "provides a class method for coercing hashes into value objects" do
+      value = CoercionTest.coercer.({ no_coercion: 'wario' })
+      expect(value.no_coercion).to eq('wario')
+
+      expect(CoercionTest.coercer.(55)).to be(55)
+    end
   end
 
   describe 'DSL' do

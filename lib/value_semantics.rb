@@ -95,6 +95,26 @@ module ValueSemantics
 
       self::VALUE_SEMANTICS_RECIPE__
     end
+
+    #
+    # A coercer object for the value class
+    #
+    # This is mostly useful when nesting value objects inside each other.
+    #
+    # The coercer will coerce hashes into an instance of the value class, using
+    # the hash for attribute values. It will return non-hash values unchanged.
+    #
+    # @return [#call] A callable object that can be used as a coercer
+    #
+    def coercer
+      ->(obj) do
+        if Hash === obj
+          new(obj)
+        else
+          obj
+        end
+      end
+    end
   end
 
   #
