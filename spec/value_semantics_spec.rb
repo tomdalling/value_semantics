@@ -304,16 +304,69 @@ RSpec.describe ValueSemantics do
     end
   end
 
-  describe 'complicated DSL usage' do
-    let(:rocket_surgery_class) do
-      Class.new do
+  describe 'DSL' do
+    it 'allows attributes to end with punctuation' do
+      klass = Class.new do
         include ValueSemantics.for_attributes {
-          qmark? default: 222
-          bool Bool()
-          moo Anything(), default: {}
-          woof! Either(String, Integer)
-          widgets String, default: [4,5,6], coerce: true
-          def_attr 'array_test', ArrayOf(Integer)
+          qmark?
+          bang!
+        }
+      end
+      expect(klass.new(qmark?: 222, bang!: 333)).to have_attributes(
+        qmark?: 222,
+        bang!: 333,
+      )
+    end
+
+    it 'has an option for default values' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          moo default: {}
+        }
+      end
+      expect(klass.new.moo).to eq({})
+    end
+
+    it 'has a built-in Anything matcher' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          wario Anything()
+        }
+      end
+      expect(klass.new(wario: RSpec).wario).to be(RSpec)
+    end
+
+    it 'has a built-in Bool matcher' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          engaged Bool()
+        }
+      end
+      expect(klass.new(engaged: true).engaged).to be(true)
+    end
+
+    it 'has a built-in Either matcher' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          woof Either(String, Integer)
+        }
+      end
+      expect(klass.new(woof: 42).woof).to eq(42)
+    end
+
+    it 'has a built-in ArrayOf matcher' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          things ArrayOf(String)
+        }
+      end
+      expect(klass.new(things: %w(a b c)).things).to eq(%w(a b c))
+    end
+
+    it 'has an option to call a class method for coercion' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          widgets String, coerce: true
         }
 
         def self.coerce_widgets(widgets)
@@ -323,23 +376,18 @@ RSpec.describe ValueSemantics do
           end
         end
       end
+
+      expect(klass.new(widgets: [1,2,3]).widgets).to eq('1|2|3')
+      expect(klass.new(widgets: 'schmidgets').widgets).to eq('schmidgets')
     end
 
-    it 'works' do
-      rs = rocket_surgery_class.new(
-        bool: true,
-        woof!: 55,
-        array_test: [1,2,3],
-      )
-
-      expect(rs).to have_attributes(
-        qmark?: 222,
-        bool: true,
-        widgets: '4|5|6',
-        moo: {},
-        woof!: 55,
-        array_test: [1,2,3],
-      )
+    it 'provides a way to define methods whose names are invalid Ruby syntax' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          def_attr 'else'
+        }
+      end
+      expect(klass.new(else: 2).else).to eq(2)
     end
   end
 
