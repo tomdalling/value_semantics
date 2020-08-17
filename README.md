@@ -354,7 +354,8 @@ which would then be coerced into an `Pathname` object.
 
 It is fairly common to nest value objects inside each other. This
 works as expected, but coercion is not automatic. For nested coercion,
-use the `.coercer` class method that ValueSemantics provides.
+use the `.coercer` class method and `ArrayCoercer` DSL method that
+ValueSemantics provides.
 
 ```ruby
 class CrabClaw
@@ -370,11 +371,26 @@ class Crab
   }
 end
 
-Crab.new(
-  left_claw: { size: :small },
-  right_claw: { size: :big },
+class Ocean
+  include ValueSemantics.for_attributes {
+    crabs ArrayOf(Crab), coerce: ArrayCoercer(Crab.coercer)
+  }
+end
+
+ocean = Ocean.new(
+  crabs: [
+    {
+      left_claw: { size: :small },
+      right_claw: { size: :small },
+    }, {
+      left_claw: { size: :big },
+      right_claw: { size: :big },
+    }
+  ]
 )
-#=> #<Crab left_claw=#<CrabClaw size=:small> right_claw=#<CrabClaw size=:big>>
+
+ocean.crabs.first #=> #<Crab left_claw=#<CrabClaw size=:small> right_claw=#<CrabClaw size=:small>>
+ocean.crabs.first.right_claw.size #=> :small
 ```
 
 

@@ -405,6 +405,17 @@ RSpec.describe ValueSemantics do
       expect(klass.new(widgets: 'schmidgets').widgets).to eq('schmidgets')
     end
 
+    it 'has a built-in ArrayCoercer coercer' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          nums coerce: ArrayCoercer(:to_i.to_proc)
+        }
+      end
+
+      value = klass.new(nums: %w(1 2 3))
+      expect(value.nums).to eq([1, 2, 3])
+    end
+
     it 'provides a way to define methods whose names are invalid Ruby syntax' do
       klass = Class.new do
         include ValueSemantics.for_attributes {
