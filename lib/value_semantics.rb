@@ -380,6 +380,17 @@ module ValueSemantics
       ArrayOf.new(element_validator)
     end
 
+    def HashOf(key_validator_to_value_validator)
+      unless key_validator_to_value_validator.size.equal?(1)
+        raise ArgumentError, "HashOf() takes a hash with one key and one value"
+      end
+
+      HashOf.new(
+        key_validator_to_value_validator.keys.first,
+        key_validator_to_value_validator.values.first,
+      )
+    end
+
     #
     # Defines one attribute.
     #
@@ -469,6 +480,25 @@ module ValueSemantics
     # @return [Boolean]
     def ===(value)
       Array === value && value.all? { |element| element_validator === element }
+    end
+  end
+
+  #
+  # Validator that matches +Hash+es with homogeneous keys and values
+  #
+  class HashOf
+    attr_reader :key_validator, :value_validator
+
+    def initialize(key_validator, value_validator)
+      @key_validator, @value_validator = key_validator, value_validator
+      freeze
+    end
+
+    # @return [Boolean]
+    def ===(value)
+      Hash === value && value.all? do |key, value|
+        key_validator === key && value_validator === value
+      end
     end
   end
 

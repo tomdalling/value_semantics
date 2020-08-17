@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Square bracket attr reader like `person[:name]`
+- `HashOf` built-in validator, similar to `ArrayOf`
 
 ## [3.4.0] - 2020-08-01
 ### Added

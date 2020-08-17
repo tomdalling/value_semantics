@@ -363,6 +363,23 @@ RSpec.describe ValueSemantics do
       expect(klass.new(things: %w(a b c)).things).to eq(%w(a b c))
     end
 
+    it 'has a built-in HashOf matcher' do
+      klass = Class.new do
+        include ValueSemantics.for_attributes {
+          counts HashOf(Symbol => Integer)
+        }
+      end
+      expect(klass.new(counts: {a: 1}).counts).to eq({a: 1})
+    end
+
+    it 'raises ArgumentError if the HashOf argument is wrong' do
+      expect do
+        ValueSemantics.for_attributes {
+          counts HashOf({ a: 1, b: 2})
+        }
+      end.to raise_error(ArgumentError, "HashOf() takes a hash with one key and one value")
+    end
+
     it 'has an option to call a class method for coercion' do
       klass = Class.new do
         include ValueSemantics.for_attributes {

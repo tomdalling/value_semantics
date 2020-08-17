@@ -212,6 +212,9 @@ class LightSwitch
     # ArrayOf: validates elements in an array
     light_ids ArrayOf(Integer)
 
+    # HashOf: validates keys/values of a homogeneous hash
+    toggle_stats HashOf(Symbol => Integer)
+
     # Either: value must match at least one of a list of validators
     color Either(Integer, String, nil)
 
@@ -223,6 +226,7 @@ end
 LightSwitch.new(
   on?: true,
   light_ids: [11, 12, 13],
+  toggle_stats: { day: 42, night: 69 },
   color: "#FFAABB",
   wierd_attr: [true, false, true, true],
 )
