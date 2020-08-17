@@ -147,6 +147,26 @@ module ValueSemantics
     end
 
     #
+    # Returns the value for the given attribute name
+    #
+    # @param attr_name [Symbol] The name of the attribute. Can not be a +String+.
+    # @return The value of the attribute
+    #
+    # @raise [UnrecognizedAttributes] if the attribute does not exist
+    #
+    def [](attr_name)
+      attr = self.class.value_semantics.attributes.find do |attr|
+        attr.name.equal?(attr_name)
+      end
+
+      if attr
+        public_send(attr_name)
+      else
+        raise UnrecognizedAttributes, "`#{self.class}` has no attribute named `#{attr_name.inspect}`"
+      end
+    end
+
+    #
     # Creates a copy of this object, with the given attributes changed (non-destructive update)
     #
     # @param new_attrs [Hash] the attributes to change

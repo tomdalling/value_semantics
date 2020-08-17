@@ -87,6 +87,16 @@ RSpec.describe ValueSemantics do
       expect{ dog.trained = false }.to raise_error(NoMethodError, /trained=/)
     end
 
+    it "has square brackets as a variable attr reader" do
+      dog = Doggums.new(name: 'Fido', trained?: true)
+
+      expect(dog[:name]).to eq('Fido')
+      expect { dog[:fins] }.to raise_error(
+        ValueSemantics::UnrecognizedAttributes,
+        "`Doggums` has no attribute named `:fins`"
+      )
+    end
+
     it "can do non-destructive updates" do
       sally = Doggums.new(name: 'Sally', trained?: false)
       bob = sally.with(name: 'Bob')

@@ -82,8 +82,8 @@ tom = Person.new(name: 'Tom')
 
 
 # Read-only attributes
-tom.name  #=> "Tom"
-tom.age  #=> 31
+tom.name    #=> "Tom"
+tom[:name]  #=> "Tom"
 
 # Convert to Hash
 tom.to_h  #=> {:name=>"Tom", :age=>31}
