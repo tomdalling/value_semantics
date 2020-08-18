@@ -9,10 +9,8 @@ if [[ "${MUTATION_TEST:-true}" == "false" ]] ; then
 else
     # The ignored subjects crash mutant, and I don't want to deal with that
     bundle exec mutant \
-        --include lib \
-        --require value_semantics \
-        --use rspec \
         --ignore-subject "ValueSemantics::Struct.new" \
         --ignore-subject "ValueSemantics::DSL#HashOf" \
+        -- \
         "$MUTANT_PATTERN"
 fi
