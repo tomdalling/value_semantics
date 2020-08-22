@@ -1,16 +1,16 @@
 #!/bin/bash
-set -ue
+set -ueo pipefail
 
 MUTANT_PATTERN=${1:-ValueSemantics*}
 
-# if $MUTATION_TEST is false, just run RSpec
-if [[ "${MUTATION_TEST:-true}" == "false" ]] ; then
-    bundle exec rspec
+if [[ "${MUTATION_TEST:-true}" == "true" ]] ; then
+  # The ignored subjects crash mutant, and I don't want to deal with that
+  bundle exec mutant \
+      --ignore-subject "ValueSemantics::Struct.new" \
+      --ignore-subject "ValueSemantics::DSL#HashOf" \
+      -- \
+      "$MUTANT_PATTERN"
 else
-    # The ignored subjects crash mutant, and I don't want to deal with that
-    bundle exec mutant \
-        --ignore-subject "ValueSemantics::Struct.new" \
-        --ignore-subject "ValueSemantics::DSL#HashOf" \
-        -- \
-        "$MUTANT_PATTERN"
+  # if $MUTATION_TEST is not 'true', just run RSpec
+  bundle exec rspec
 fi
