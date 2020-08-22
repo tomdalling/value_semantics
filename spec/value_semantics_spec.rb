@@ -132,14 +132,6 @@ RSpec.describe ValueSemantics do
       mod = Doggums.ancestors[1]
       expect(mod.name).to eq("Doggums::ValueSemantics_Attributes")
     end
-
-    it "has a frozen recipe" do
-      vs = Doggums.value_semantics
-      expect(vs).to be_a(ValueSemantics::Recipe)
-      expect(vs).to be_frozen
-      expect(vs.attributes).to be_frozen
-      expect(vs.attributes.first).to be_frozen
-    end
   end
 
   describe 'default values' do
@@ -171,17 +163,6 @@ RSpec.describe ValueSemantics do
 
     it "can generate defaults with a proc" do
       expect(cat.new.born_at).to be_a(Time)
-    end
-
-    it "does not allow both `default:` and `default_generator:` options" do
-      expect do
-        ValueSemantics.for_attributes {
-          both default: 5, default_generator: ->{ rand }
-        }
-      end.to raise_error(
-        ArgumentError,
-        "Attribute `both` can not have both a `:default` and a `:default_generator`",
-      )
     end
   end
 
@@ -308,121 +289,6 @@ RSpec.describe ValueSemantics do
       expect(value.no_coercion).to eq('wario')
 
       expect(CoercionTest.coercer.(55)).to be(55)
-    end
-  end
-
-  describe 'DSL' do
-    it 'allows attributes to end with punctuation' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          qmark?
-          bang!
-        }
-      end
-      expect(klass.new(qmark?: 222, bang!: 333)).to have_attributes(
-        qmark?: 222,
-        bang!: 333,
-      )
-    end
-
-    it 'has an option for default values' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          moo default: {}
-        }
-      end
-      expect(klass.new.moo).to eq({})
-    end
-
-    it 'has a built-in Anything matcher' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          wario Anything()
-        }
-      end
-      expect(klass.new(wario: RSpec).wario).to be(RSpec)
-    end
-
-    it 'has a built-in Bool matcher' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          engaged Bool()
-        }
-      end
-      expect(klass.new(engaged: true).engaged).to be(true)
-    end
-
-    it 'has a built-in Either matcher' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          woof Either(String, Integer)
-        }
-      end
-      expect(klass.new(woof: 42).woof).to eq(42)
-    end
-
-    it 'has a built-in ArrayOf matcher' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          things ArrayOf(String)
-        }
-      end
-      expect(klass.new(things: %w(a b c)).things).to eq(%w(a b c))
-    end
-
-    it 'has a built-in HashOf matcher' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          counts HashOf(Symbol => Integer)
-        }
-      end
-      expect(klass.new(counts: {a: 1}).counts).to eq({a: 1})
-    end
-
-    it 'raises ArgumentError if the HashOf argument is wrong' do
-      expect do
-        ValueSemantics.for_attributes {
-          counts HashOf({ a: 1, b: 2})
-        }
-      end.to raise_error(ArgumentError, "HashOf() takes a hash with one key and one value")
-    end
-
-    it 'has an option to call a class method for coercion' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          widgets String, coerce: true
-        }
-
-        def self.coerce_widgets(widgets)
-          case widgets
-          when Array then widgets.join('|')
-          else widgets
-          end
-        end
-      end
-
-      expect(klass.new(widgets: [1,2,3]).widgets).to eq('1|2|3')
-      expect(klass.new(widgets: 'schmidgets').widgets).to eq('schmidgets')
-    end
-
-    it 'has a built-in ArrayCoercer coercer' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          nums coerce: ArrayCoercer(:to_i.to_proc)
-        }
-      end
-
-      value = klass.new(nums: %w(1 2 3))
-      expect(value.nums).to eq([1, 2, 3])
-    end
-
-    it 'provides a way to define methods whose names are invalid Ruby syntax' do
-      klass = Class.new do
-        include ValueSemantics.for_attributes {
-          def_attr 'else'
-        }
-      end
-      expect(klass.new(else: 2).else).to eq(2)
     end
   end
 

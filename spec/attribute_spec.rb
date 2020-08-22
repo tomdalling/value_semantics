@@ -1,6 +1,6 @@
-RSpec.describe ValueSemantics do
-  describe ValueSemantics::Attribute do
-    subject { described_class.new(name: :whatever) }
+RSpec.describe ValueSemantics::Attribute do
+  context 'defined with no options in particular' do
+    subject { described_class.define(:whatever) }
 
     it 'raises if attempting to use missing default attribute' do
       expect { subject.default_generator.call }.to raise_error(
@@ -9,11 +9,118 @@ RSpec.describe ValueSemantics do
     end
 
     it 'has default attributes' do
-      is_expected.to have_attributes(
+      expect(subject).to have_attributes(
         name: :whatever,
         validator: be(ValueSemantics::Anything),
         coercer: nil,
         default_generator: be(ValueSemantics::Attribute::NO_DEFAULT_GENERATOR),
+      )
+    end
+
+    it 'is frozen' do
+      is_expected.to be_frozen
+    end
+
+    it 'raises an error if it cant determine the attr from a hash' do
+      expect { subject.determine_from!({}, Integer) }.to raise_error(
+        ValueSemantics::MissingAttributes,
+        'Attribute `Integer#whatever` has no value',
+      )
+    end
+  end
+
+  context 'initialized with no options in particular' do
+    subject { described_class.new(name: :whatever) }
+
+    it 'has default attributes' do
+      expect(subject).to have_attributes(
+        name: :whatever,
+        validator: be(ValueSemantics::Anything),
+        coercer: nil,
+        default_generator: be(ValueSemantics::Attribute::NO_DEFAULT_GENERATOR),
+      )
+    end
+  end
+
+  context 'with a name ending in "?"' do
+    subject { described_class.new(name: :x?) }
+
+    it 'does not include the "?" in the instance variable name' do
+      is_expected.to have_attributes(instance_variable: '@x')
+    end
+  end
+
+  context 'with a name ending in "!"' do
+    subject { described_class.new(name: :x!) }
+
+    it 'does not include the "!" in the instance variable name' do
+      is_expected.to have_attributes(instance_variable: '@x')
+    end
+  end
+
+  context 'with a string name' do
+    subject { described_class.new(name: 'x') }
+
+    it 'converts the string to a symbol' do
+      is_expected.to have_attributes(name: :x)
+    end
+  end
+
+  context 'defined with a validator' do
+    subject { described_class.define(:x, Integer) }
+
+    it 'determines values from a hash' do
+      expect(subject.determine_from!({x: 5}, nil)).to eq([:x, 5])
+    end
+
+    it 'raises an error if the determined value is invalid' do
+      expect { subject.determine_from!({x: 'no'}, Integer) }.to raise_error(
+        ValueSemantics::InvalidValue,
+        'Attribute `Integer#x` is invalid: "no"'
+      )
+    end
+  end
+
+  context 'defined with a `true` coercer' do
+    subject { described_class.define(:x, coerce: true) }
+
+    it 'calls a class method to do coercion' do
+      klass = double
+      allow(klass).to receive(:coerce_x).with(5).and_return(66)
+      expect(subject.determine_from!({x: 5}, klass)).to eq([:x, 66])
+    end
+  end
+
+  context 'defined with a callable coercer' do
+    subject { described_class.define(:x, coerce: ->(v) { v + 100 }) }
+
+    it 'calls the coercer with the given value' do
+      expect(subject.determine_from!({x: 1}, nil)).to eq([:x, 101])
+    end
+  end
+
+  context 'defined with a default' do
+    subject { described_class.define(:x, default: 88) }
+
+    it 'uses the default when no value is provided' do
+      expect(subject.determine_from!({}, nil)).to eq([:x, 88])
+    end
+  end
+
+  context 'defined with a default generator' do
+    subject { described_class.define(:x, default_generator: ->() { 77 }) }
+
+    it 'calls the default generator when no value is provided' do
+      expect(subject.determine_from!({}, nil)).to eq([:x, 77])
+    end
+  end
+
+  context 'defined with both a default and a default generator' do
+    subject { described_class.define(:x, default: 5, default_generator: 5) }
+
+    it 'raises an error' do
+      expect { subject }.to raise_error(ArgumentError,
+        "Attribute `x` can not have both a `:default` and a `:default_generator`"
       )
     end
   end

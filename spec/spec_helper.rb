@@ -1,4 +1,5 @@
 require "bundler/setup"
+require "delegate"
 require "super_diff/rspec"
 require "value_semantics"
 require "byebug"

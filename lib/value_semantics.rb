@@ -441,6 +441,7 @@ module ValueSemantics
     #
     def def_attr(*args, **kwargs)
       __attributes << Attribute.define(*args, **kwargs)
+      nil
     end
 
     def method_missing(name, *args, **kwargs)
