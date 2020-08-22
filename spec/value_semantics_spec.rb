@@ -53,6 +53,11 @@ RSpec.describe ValueSemantics do
       )
     end
 
+    it "gives precedence to `UnrecognizedAttributes` over `MissingAttributes`" do
+      expect { Doggums.new(nayme: 'Fiydo', tentacles: 8) }
+        .to raise_error(ValueSemantics::UnrecognizedAttributes, /tentacles/)
+    end
+
     it "can not be constructed with an object that does not respond to #to_h" do
       expect { dog_class.new(double) }.to raise_error(TypeError,
         <<~END_MESSAGE.strip.split.join(' ')

@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implementation detail that is basically gibberish to any developer
   reading it. The stack trace for this exception reads much better.
 
+- The exception `ValueSemantics::UnrecognizedAttributes` is now raised
+  instead of `ValueSemantics::MissingAttributes` in the situation
+  where both exceptions would be raised. This makes it easier to debug
+  the problem where you attempt to initialize a value object using a
+  hash with string keys instead of symbol keys.
+
 ## [3.5.0] - 2020-08-17
 ### Added
 - Square bracket attr reader like `person[:name]`

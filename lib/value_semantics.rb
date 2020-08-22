@@ -146,24 +146,22 @@ module ValueSemantics
           END_MESSAGE
         end
 
-      remaining_attrs = attributes_hash.dup
-
-      self.class.value_semantics.attributes.each do |attr|
-        key, value, error = attr.determine_from(remaining_attrs, self.class)
-        raise error if error
-        instance_variable_set(attr.instance_variable, value)
-        remaining_attrs.delete(key)
-      end
-
-      unless remaining_attrs.empty?
+      vs_attributes = self.class.value_semantics.attributes
+      extraneous_attributes = attributes_hash.keys - vs_attributes.map(&:name)
+      unless extraneous_attributes.empty?
         raise(
           UnrecognizedAttributes,
           "`#{self.class}` does not define attributes: " +
-            remaining_attrs
-              .keys
+            extraneous_attributes
               .map { |k| '`' + k.inspect + '`' }
               .join(', ')
         )
+      end
+
+      vs_attributes.each do |attr|
+        value, error = attr.determine_from(attributes_hash, self.class)
+        raise error if error
+        instance_variable_set(attr.instance_variable, value)
       end
     end
 
@@ -309,7 +307,7 @@ module ValueSemantics
     def determine_from(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
         if default_generator.equal?(NO_DEFAULT_GENERATOR)
-          return nil, nil, MissingAttributes.new("Attribute `#{klass}\##{name}` has no value")
+          return [nil, MissingAttributes.new("Attribute `#{klass}\##{name}` has no value")]
         else
           default_generator.call
         end
@@ -318,9 +316,9 @@ module ValueSemantics
       coerced_value = coerce(raw_value, klass)
 
       if validate?(coerced_value)
-        [name, coerced_value]
+        [coerced_value, nil]
       else
-        return nil, nil, InvalidValue.new("Attribute `#{klass}\##{name}` is invalid: #{coerced_value.inspect}")
+        [nil, InvalidValue.new("Attribute `#{klass}\##{name}` is invalid: #{coerced_value.inspect}")]
       end
     end
 
