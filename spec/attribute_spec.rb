@@ -21,11 +21,10 @@ RSpec.describe ValueSemantics::Attribute do
       is_expected.to be_frozen
     end
 
-    it 'raises an error if it cant determine the attr from a hash' do
-      expect { subject.determine_from!({}, Integer) }.to raise_error(
-        ValueSemantics::MissingAttributes,
-        'Attribute `Integer#whatever` has no value',
-      )
+    it 'returns an exception if it cant determine the attr from a hash' do
+      _, _, ex = subject.determine_from({}, Integer)
+      expect(ex).to be_a(ValueSemantics::MissingAttributes)
+      expect(ex.message).to eq('Attribute `Integer#whatever` has no value')
     end
   end
 
@@ -70,14 +69,13 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, Integer) }
 
     it 'determines values from a hash' do
-      expect(subject.determine_from!({x: 5}, nil)).to eq([:x, 5])
+      expect(subject.determine_from({x: 5}, nil)).to eq([:x, 5])
     end
 
-    it 'raises an error if the determined value is invalid' do
-      expect { subject.determine_from!({x: 'no'}, Integer) }.to raise_error(
-        ValueSemantics::InvalidValue,
-        'Attribute `Integer#x` is invalid: "no"'
-      )
+    it 'returns an exception if the determined value is invalid' do
+      _, _, ex = subject.determine_from({x: 'no'}, Integer)
+      expect(ex).to be_a(ValueSemantics::InvalidValue)
+      expect(ex.message).to eq('Attribute `Integer#x` is invalid: "no"')
     end
   end
 
@@ -87,7 +85,7 @@ RSpec.describe ValueSemantics::Attribute do
     it 'calls a class method to do coercion' do
       klass = double
       allow(klass).to receive(:coerce_x).with(5).and_return(66)
-      expect(subject.determine_from!({x: 5}, klass)).to eq([:x, 66])
+      expect(subject.determine_from({x: 5}, klass)).to eq([:x, 66])
     end
   end
 
@@ -95,7 +93,7 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, coerce: ->(v) { v + 100 }) }
 
     it 'calls the coercer with the given value' do
-      expect(subject.determine_from!({x: 1}, nil)).to eq([:x, 101])
+      expect(subject.determine_from({x: 1}, nil)).to eq([:x, 101])
     end
   end
 
@@ -103,7 +101,7 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, default: 88) }
 
     it 'uses the default when no value is provided' do
-      expect(subject.determine_from!({}, nil)).to eq([:x, 88])
+      expect(subject.determine_from({}, nil)).to eq([:x, 88])
     end
   end
 
@@ -111,7 +109,7 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, default_generator: ->() { 77 }) }
 
     it 'calls the default generator when no value is provided' do
-      expect(subject.determine_from!({}, nil)).to eq([:x, 77])
+      expect(subject.determine_from({}, nil)).to eq([:x, 77])
     end
   end
 

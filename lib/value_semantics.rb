@@ -149,7 +149,8 @@ module ValueSemantics
       remaining_attrs = attributes_hash.dup
 
       self.class.value_semantics.attributes.each do |attr|
-        key, value = attr.determine_from!(remaining_attrs, self.class)
+        key, value, error = attr.determine_from(remaining_attrs, self.class)
+        raise error if error
         instance_variable_set(attr.instance_variable, value)
         remaining_attrs.delete(key)
       end
@@ -305,10 +306,10 @@ module ValueSemantics
       )
     end
 
-    def determine_from!(attr_hash, klass)
+    def determine_from(attr_hash, klass)
       raw_value = attr_hash.fetch(name) do
         if default_generator.equal?(NO_DEFAULT_GENERATOR)
-          raise MissingAttributes, "Attribute `#{klass}\##{name}` has no value"
+          return nil, nil, MissingAttributes.new("Attribute `#{klass}\##{name}` has no value")
         else
           default_generator.call
         end
@@ -319,7 +320,7 @@ module ValueSemantics
       if validate?(coerced_value)
         [name, coerced_value]
       else
-        raise InvalidValue, "Attribute `#{klass}\##{name}` is invalid: #{coerced_value.inspect}"
+        return nil, nil, InvalidValue.new("Attribute `#{klass}\##{name}` is invalid: #{coerced_value.inspect}")
       end
     end
 

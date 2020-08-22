@@ -5,6 +5,15 @@ Notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Changed
+- The exceptions `ValueSemantics::MissingAttributes` and
+  `ValueSemantics::InvalidValue` are now raised from inside
+  `initialize`. They were previously raised from inside of
+  `ValueSemantics::Attribute.determine_from!` which is an internal
+  implementation detail that is basically gibberish to any developer
+  reading it. The stack trace for this exception reads much better.
+
 ## [3.5.0] - 2020-08-17
 ### Added
 - Square bracket attr reader like `person[:name]`
