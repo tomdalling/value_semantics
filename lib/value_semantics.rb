@@ -265,10 +265,12 @@ module ValueSemantics
 
     attr_reader :name, :validator, :coercer, :default_generator
 
-    def initialize(name:,
-                   default_generator: NO_DEFAULT_GENERATOR,
-                   validator: Anything,
-                   coercer: nil)
+    def initialize(
+      name:,
+      default_generator: NO_DEFAULT_GENERATOR,
+      validator: Anything,
+      coercer: nil
+    )
       @name = name.to_sym
       @default_generator = default_generator
       @validator = validator
@@ -276,11 +278,13 @@ module ValueSemantics
       freeze
     end
 
-    def self.define(name,
-                    validator=Anything,
-                    default: NOT_SPECIFIED,
-                    default_generator: nil,
-                    coerce: nil)
+    def self.define(
+      name,
+      validator=Anything,
+      default: NOT_SPECIFIED,
+      default_generator: nil,
+      coerce: nil
+    )
       generator = begin
         if default_generator && !default.equal?(NOT_SPECIFIED)
           raise ArgumentError, "Attribute `#{name}` can not have both a `:default` and a `:default_generator`"
