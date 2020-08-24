@@ -472,7 +472,7 @@ I'm happy to accept PRs that:
 
  - Improve error messages for a better developer experience, especially those
    that support a TDD workflow.
- - Add new, helpful validators
+ - Add new and helpful built-in validators and coercers
  - Implement automatic freezing of value objects (must be opt-in)
 
 ## License
