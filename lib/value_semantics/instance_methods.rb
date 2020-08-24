@@ -29,6 +29,11 @@ module ValueSemantics
         end
 
       vs_attributes = self.class.value_semantics.attributes
+
+      # TODO: aggregate all exceptions raised from #initialize into one big
+      # exception that explains everything that went wrong, instead of multiple
+      # smaller exceptions. Unfortunately, this would not be backwards
+      # compatible.
       extraneous_attributes = attributes_hash.keys - vs_attributes.map(&:name)
       unless extraneous_attributes.empty?
         raise(

@@ -30,6 +30,13 @@ module ValueSemantics
       default_generator: nil,
       coerce: nil
     )
+      # TODO: change how defaults are specified:
+      #
+      #  - default: either a value, or a callable
+      #  - default_value: always a value
+      #  - default_generator: always a callable
+      #
+      # This would not be a backwards compatible change.
       generator = begin
         if default_generator && !default.equal?(NOT_SPECIFIED)
           raise ArgumentError, "Attribute `#{name}` can not have both a `:default` and a `:default_generator`"
