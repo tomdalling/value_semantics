@@ -54,6 +54,11 @@ RSpec.describe ValueSemantics::DSL do
     )
   end
 
+  it 'has a built-in RangeOf matcher' do
+    validator = subject.RangeOf(Integer)
+    expect(validator).to be === (1..10)
+  end
+
   it 'has a built-in ArrayCoercer coercer' do
     coercer = subject.ArrayCoercer(:to_i.to_proc)
     expect(coercer.(%w(1 2 3))).to eq([1, 2, 3])

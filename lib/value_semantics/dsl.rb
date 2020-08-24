@@ -52,6 +52,10 @@ module ValueSemantics
       )
     end
 
+    def RangeOf(subvalidator)
+      RangeOf.new(subvalidator)
+    end
+
     def ArrayCoercer(element_coercer)
       ArrayCoercer.new(element_coercer)
     end

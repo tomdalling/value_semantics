@@ -215,6 +215,9 @@ class LightSwitch
     # HashOf: validates keys/values of a homogeneous hash
     toggle_stats HashOf(Symbol => Integer)
 
+    # RangeOf: validates ranges
+    levels RangeOf(Integer)
+
     # Either: value must match at least one of a list of validators
     color Either(Integer, String, nil)
 
@@ -227,10 +230,11 @@ LightSwitch.new(
   on?: true,
   light_ids: [11, 12, 13],
   toggle_stats: { day: 42, night: 69 },
+  levels: (0..10),
   color: "#FFAABB",
   wierd_attr: [true, false, true, true],
 )
-#=> #<LightSwitch on?=true light_ids=[11, 12, 13] toggle_stats={:day=>42, :night=>69} color="#FFAABB" wierd_attr=[true, false, true, true]>
+#=> #<LightSwitch on?=true light_ids=[11, 12, 13] toggle_stats={:day=>42, :night=>69} levels=0..10 color="#FFAABB" wierd_attr=[true, false, true, true]>
 ```
 
 

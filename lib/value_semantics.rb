@@ -9,6 +9,7 @@
   either
   hash_of
   instance_methods
+  range_of
   recipe
   struct
   value_object_coercer
