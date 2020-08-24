@@ -68,6 +68,16 @@ module ValueSemantics
       end
     end
 
+    # @deprecated Use {#determine_from} instead
+    def determine_from!(attr_hash, klass)
+      value, error = determine_from(attr_hash, klass)
+      if error
+        raise error
+      else
+        [name, value]
+      end
+    end
+
     def coerce(attr_value, klass)
       return attr_value unless coercer # coercion not enabled
 

@@ -24,6 +24,9 @@ module ValueSemantics
   class MissingAttributes < Error; end
   class InvalidValue < ArgumentError; end
 
+  # @deprecated Use {Attribute::NOT_SPECIFIED} instead
+  NOT_SPECIFIED = Attribute::NOT_SPECIFIED
+
   #
   # Creates a module via the DSL
   #

@@ -122,4 +122,15 @@ RSpec.describe ValueSemantics::Attribute do
       )
     end
   end
+
+  context 'deprecated methods' do
+    specify '#determine_from!' do
+      subject = described_class.new(name: :x, validator: Integer)
+      expect(subject.determine_from!({ x: 3 }, Array)).to eq([:x, 3])
+      expect { subject.determine_from!({ x: 'no' }, Array) }.to raise_error(
+        ValueSemantics::InvalidValue,
+        'Attribute `Array#x` is invalid: "no"',
+      )
+    end
+  end
 end
