@@ -7,7 +7,7 @@
     "type": "test",
     "alternate": "lib/value_semantics/{}.rb",
     "template": [
-      "RSpec.describe {camelcase|capitalize|colons} do",
+      "RSpec.describe ValueSemantics::{camelcase|capitalize|colons} do",
       "end"
     ]
   },
