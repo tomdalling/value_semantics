@@ -1,0 +1,14 @@
+{
+  "lib/value_semantics/*.rb": {
+    "type": "source",
+    "alternate": "spec/{}_spec.rb"
+  },
+  "spec/*_spec.rb": {
+    "type": "test",
+    "alternate": "lib/value_semantics/{}.rb",
+    "template": [
+      "RSpec.describe {camelcase|capitalize|colons} do",
+      "end"
+    ]
+  },
+}
