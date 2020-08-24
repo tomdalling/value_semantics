@@ -7,10 +7,10 @@ RSpec.describe ValueSemantics::ArrayOf do
   end
 
   it 'does not match anything else' do
-    is_expected.not_to be === nil
-    is_expected.not_to be === 'hello'
-    is_expected.not_to be === %i(1 2 3)
-    is_expected.not_to be === Set.new([1, 2, 3])
+    expect(subject === nil).to be(false)
+    expect(subject === 'hello').to be(false)
+    expect(subject === %i(1 2 3)).to be(false)
+    expect(subject === Set.new([1, 2, 3])).to be(false)
   end
 
   it 'is frozen' do

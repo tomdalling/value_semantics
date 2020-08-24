@@ -5,7 +5,7 @@ RSpec.describe ValueSemantics::Bool do
   end
 
   it 'does not match nil or other values' do
-    is_expected.not_to be === nil
-    is_expected.not_to be === 5
+    expect(subject === nil).to be(false)
+    expect(subject === 5).to be(false)
   end
 end

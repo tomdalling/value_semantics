@@ -10,18 +10,18 @@ RSpec.describe ValueSemantics::HashOf do
   end
 
   it 'does not match hashes where the key validator does not match' do
-    is_expected.not_to be === { a: 1.2 }
+    expect(subject === { a: 1.2 }).to be(false)
   end
 
   it 'does not match hashes where the value validator does not match' do
-    is_expected.not_to be === { 1 => 'no' }
+    expect(subject === { 1 => 'no' }).to be(false)
   end
 
   it 'does not match anything else' do
-    is_expected.not_to be === nil
-    is_expected.not_to be === 'hello'
-    is_expected.not_to be === [1, 1.2, 2, 2.4]
-    is_expected.not_to be === [[1, 1.2], [2, 2.4]]
+    expect(subject === nil).to be(false)
+    expect(subject === 'hello').to be(false)
+    expect(subject === [1, 1.2, 2, 2.4]).to be(false)
+    expect(subject === [[1, 1.2], [2, 2.4]]).to be(false)
   end
 
   it 'is frozen' do
