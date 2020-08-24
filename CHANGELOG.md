@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the problem where you attempt to initialize a value object using a
   hash with string keys instead of symbol keys.
 
+- The coercer returned from the `.coercer` class method is now
+  smarter. It handles string keys, handles objects that can be
+  converted to hashes.
+
 ## [3.5.0] - 2020-08-17
 ### Added
 - Square bracket attr reader like `person[:name]`

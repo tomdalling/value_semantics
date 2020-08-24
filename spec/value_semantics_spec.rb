@@ -290,10 +290,8 @@ RSpec.describe ValueSemantics do
     end
 
     it "provides a class method for coercing hashes into value objects" do
-      value = CoercionTest.coercer.({ no_coercion: 'wario' })
+      value = CoercionTest.coercer.([['no_coercion', 'wario']])
       expect(value.no_coercion).to eq('wario')
-
-      expect(CoercionTest.coercer.(55)).to be(55)
     end
   end
 

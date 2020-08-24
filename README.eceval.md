@@ -353,9 +353,14 @@ which would then be coerced into an `Pathname` object.
 ## Nesting
 
 It is fairly common to nest value objects inside each other. This
-works as expected, but coercion is not automatic. For nested coercion,
-use the `.coercer` class method and `ArrayCoercer` DSL method that
-ValueSemantics provides.
+works as expected, but coercion is not automatic.
+
+For nested coercion, use the `.coercer` class method that
+ValueSemantics provides. It returns a coercer object that accepts
+strings for attribute names, and will ignore attributes that the value
+class does not define, instead of raising an error.
+
+This works well in combination with `ArrayCoercer`.
 
 ```ruby
 class CrabClaw
@@ -380,11 +385,12 @@ end
 ocean = Ocean.new(
   crabs: [
     {
-      left_claw: { size: :small },
-      right_claw: { size: :small },
+      'left_claw' => { 'size' => :small },
+      'right_claw' => { 'size' => :small },
+      voiced_by: 'Samuel E. Wright',  # this attr will be ignored
     }, {
-      left_claw: { size: :big },
-      right_claw: { size: :big },
+      'left_claw' => { 'size' => :big },
+      'right_claw' => { 'size' => :big },
     }
   ]
 )
