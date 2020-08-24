@@ -57,39 +57,44 @@ module ValueSemantics
       )
     end
 
-    def determine_from(attr_hash, klass)
+    def determine_from(attr_hash, value_class: nil)
       raw_value = attr_hash.fetch(name) do
         if default_generator.equal?(NO_DEFAULT_GENERATOR)
-          return [nil, MissingAttributes.new("Attribute `#{klass}\##{name}` has no value")]
+          return [nil, :missing]
         else
           default_generator.call
         end
       end
 
-      coerced_value = coerce(raw_value, klass)
-
+      coerced_value = coerce(raw_value, value_class)
       if validate?(coerced_value)
         [coerced_value, nil]
       else
-        [nil, InvalidValue.new("Attribute `#{klass}\##{name}` is invalid: #{coerced_value.inspect}")]
+        [coerced_value, :invalid]
       end
     end
 
     # @deprecated Use {#determine_from} instead
-    def determine_from!(attr_hash, klass)
-      value, error = determine_from(attr_hash, klass)
-      if error
-        raise error
-      else
+    def determine_from!(attr_hash, value_class)
+      value, error_type = determine_from(attr_hash, value_class: value_class)
+
+      case error_type
+      when nil
         [name, value]
+      when :invalid
+        raise InvalidValue, "Attribute `#{value_class}\##{name}` is invalid: #{value.inspect}"
+      when :missing
+        raise MissingAttributes, "Attribute `#{value_class}\##{name}` has no value"
+      else
+        fail("Unhandled error type: #{error_type.inspect}")
       end
     end
 
-    def coerce(attr_value, klass)
+    def coerce(attr_value, value_class)
       return attr_value unless coercer # coercion not enabled
 
       if coercer.equal?(true)
-        klass.public_send(coercion_method, attr_value)
+        value_class.public_send(coercion_method, attr_value)
       else
         coercer.call(attr_value)
       end

@@ -36,19 +36,42 @@ module ValueSemantics
       # compatible.
       extraneous_attributes = attributes_hash.keys - vs_attributes.map(&:name)
       unless extraneous_attributes.empty?
-        raise(
-          UnrecognizedAttributes,
+        raise UnrecognizedAttributes.new(
           "`#{self.class}` does not define attributes: " +
-            extraneous_attributes
-              .map { |k| '`' + k.inspect + '`' }
-              .join(', ')
+            extraneous_attributes.map { |k| '`' + k.inspect + '`' }.join(', ')
         )
       end
 
+      missing_attrs = []
+      invalid_attrs = {}
+
       vs_attributes.each do |attr|
-        value, error = attr.determine_from(attributes_hash, self.class)
-        raise error if error
-        instance_variable_set(attr.instance_variable, value)
+        value, error_type = attr.determine_from(attributes_hash, value_class: self.class)
+
+        if error_type.equal?(nil)
+          instance_variable_set(attr.instance_variable, value)
+        elsif error_type.equal?(:missing)
+          missing_attrs << attr.name
+        elsif error_type.equal?(:invalid)
+          invalid_attrs[attr.name] = value
+        else
+          fail "Unhandled error type: #{error_type.inspect}"
+        end
+      end
+
+      unless missing_attrs.empty?
+        raise MissingAttributes.new(
+          "Some attributes required by `#{self.class}` are missing: " +
+            missing_attrs.map { |a| "`#{a}`" }.join(', ')
+        )
+      end
+
+      unless invalid_attrs.empty?
+        raise InvalidValue.new(
+          "Some attributes of `#{self.class}` are invalid:\n" +
+            invalid_attrs.map { |k,v| "  - #{k}: #{v.inspect}" }.join("\n") +
+            "\n"
+        )
       end
     end
 

@@ -38,9 +38,9 @@ RSpec.describe ValueSemantics do
     end
 
     it "can not be constructed with attributes missing" do
-      expect { dog = Doggums.new(name: 'Fido') }.to raise_error(
+      expect { Doggums.new }.to raise_error(
         ValueSemantics::MissingAttributes,
-        "Attribute `Doggums#trained?` has no value",
+        "Some attributes required by `Doggums` are missing: `name`, `trained?`",
       )
     end
 
@@ -181,17 +181,22 @@ RSpec.describe ValueSemantics do
     class Birb
       include ValueSemantics.for_attributes {
         wings WingValidator
+        i Integer
       }
     end
 
     it "accepts values that pass the validator" do
-      expect{ Birb.new(wings: 'feathery flappers') }.not_to raise_error
+      expect{ Birb.new(wings: 'feathery flappers', i: 0) }.not_to raise_error
     end
 
     it "rejects values that fail the validator" do
-      expect{ Birb.new(wings: 'smooth feet') }.to raise_error(
+      expect{ Birb.new(wings: 'smooth feet', i: 0.0) }.to raise_error(
         ValueSemantics::InvalidValue,
-        'Attribute `Birb#wings` is invalid: "smooth feet"',
+        <<~END_ERROR
+          Some attributes of `Birb` are invalid:
+            - wings: "smooth feet"
+            - i: 0.0
+        END_ERROR
       )
     end
   end
@@ -285,7 +290,10 @@ RSpec.describe ValueSemantics do
         CoercionTest.new(double_it: 6)
       }.to raise_error(
         ValueSemantics::InvalidValue,
-        "Attribute `CoercionTest#double_it` is invalid: 12",
+        <<~END_ERROR
+          Some attributes of `CoercionTest` are invalid:
+            - double_it: 12
+        END_ERROR
       )
     end
 
@@ -293,6 +301,24 @@ RSpec.describe ValueSemantics do
       value = CoercionTest.coercer.([['no_coercion', 'wario']])
       expect(value.no_coercion).to eq('wario')
     end
+  end
+
+  # NOTE: this test is just to make mutant happy
+  it "has a debugging error when attributes produce unhandled error types" do
+    value_class = Class.new
+    value_class.include(
+      ValueSemantics.bake_module(
+        ValueSemantics::Recipe.new(attributes: [
+          double(
+            name: :x,
+            instance_variable: '@x',
+            determine_from: [nil, :luigi],
+          )
+        ])
+      )
+    )
+
+    expect { value_class.new }.to raise_error("Unhandled error type: :luigi")
   end
 
   it "has a version number" do

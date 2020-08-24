@@ -21,10 +21,9 @@ RSpec.describe ValueSemantics::Attribute do
       is_expected.to be_frozen
     end
 
-    it 'returns an exception if it cant determine the attr from a hash' do
-      _, ex = subject.determine_from({}, Integer)
-      expect(ex).to be_a(ValueSemantics::MissingAttributes)
-      expect(ex.message).to eq('Attribute `Integer#whatever` has no value')
+    it 'returns the :missing error type if it cant be determined from a hash of attribute values' do
+      _, error_type = subject.determine_from({})
+      expect(error_type).to be(:missing)
     end
   end
 
@@ -69,13 +68,12 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, Integer) }
 
     it 'determines values from a hash' do
-      expect(subject.determine_from({x: 5}, nil)).to eq([5, nil])
+      expect(subject.determine_from({x: 5})).to eq([5, nil])
     end
 
     it 'returns an exception if the determined value is invalid' do
-      _, ex = subject.determine_from({x: 'no'}, Integer)
-      expect(ex).to be_a(ValueSemantics::InvalidValue)
-      expect(ex.message).to eq('Attribute `Integer#x` is invalid: "no"')
+      _, error_type = subject.determine_from({x: 'no'})
+      expect(error_type).to be(:invalid)
     end
   end
 
@@ -85,7 +83,7 @@ RSpec.describe ValueSemantics::Attribute do
     it 'calls a class method to do coercion' do
       klass = double
       allow(klass).to receive(:coerce_x).with(5).and_return(66)
-      expect(subject.determine_from({x: 5}, klass)).to eq([66, nil])
+      expect(subject.determine_from({x: 5}, value_class: klass)).to eq([66, nil])
     end
   end
 
@@ -93,7 +91,7 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, coerce: ->(v) { v + 100 }) }
 
     it 'calls the coercer with the given value' do
-      expect(subject.determine_from({x: 1}, nil)).to eq([101, nil])
+      expect(subject.determine_from({x: 1})).to eq([101, nil])
     end
   end
 
@@ -101,7 +99,7 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, default: 88) }
 
     it 'uses the default when no value is provided' do
-      expect(subject.determine_from({}, nil)).to eq([88, nil])
+      expect(subject.determine_from({})).to eq([88, nil])
     end
   end
 
@@ -109,7 +107,7 @@ RSpec.describe ValueSemantics::Attribute do
     subject { described_class.define(:x, default_generator: ->() { 77 }) }
 
     it 'calls the default generator when no value is provided' do
-      expect(subject.determine_from({}, nil)).to eq([77, nil])
+      expect(subject.determine_from({})).to eq([77, nil])
     end
   end
 
@@ -124,13 +122,39 @@ RSpec.describe ValueSemantics::Attribute do
   end
 
   context 'deprecated methods' do
-    specify '#determine_from!' do
-      subject = described_class.new(name: :x, validator: Integer)
-      expect(subject.determine_from!({ x: 3 }, Array)).to eq([:x, 3])
-      expect { subject.determine_from!({ x: 'no' }, Array) }.to raise_error(
-        ValueSemantics::InvalidValue,
-        'Attribute `Array#x` is invalid: "no"',
-      )
+    context '#determine_from!' do
+      subject { described_class.new(name: :x, validator: Integer) }
+
+      it 'returns a [name, value] tuple on success' do
+        expect(subject.determine_from!({ x: 3 }, Array)).to eq([:x, 3])
+      end
+
+      it 'raises MissingAttributes if the attr cant be found' do
+        expect { subject.determine_from!({}, Array) }.to raise_error(
+          ValueSemantics::MissingAttributes,
+          'Attribute `Array#x` has no value',
+        )
+      end
+
+      it 'raises InvalidValue when a validator fails' do
+        expect { subject.determine_from!({ x: 'no' }, Array) }.to raise_error(
+          ValueSemantics::InvalidValue,
+          'Attribute `Array#x` is invalid: "no"',
+        )
+      end
+
+      # NOTE: this test is just to make mutant happy
+      it 'raises a debugging error if the error type is unexpected' do
+        subject = Class.new(described_class) do
+          def determine_from(*)
+            [nil, :unexpected_type]
+          end
+        end.new(name: :x)
+
+        expect { subject.determine_from!(nil, nil) }.to raise_error(
+          "Unhandled error type: :unexpected_type"
+        )
+      end
     end
   end
 end
