@@ -1,3 +1,4 @@
+# Only works in Ruby 2.7+
 RSpec.describe ValueSemantics, 'pattern matching integration' do
   shared_examples 'pattern matching' do
     it 'deconstructs to a hash' do

@@ -5,14 +5,6 @@ RSpec.describe ValueSemantics::RangeOf do
     is_expected.to be === (1..10)
   end
 
-  it 'matches beginless ranges' do
-    is_expected.to be === (1..)
-  end
-
-  it 'matches endless ranges' do
-    is_expected.to be === (..10)
-  end
-
   it 'does not match ranges whose `begin` does not match the subvalidator' do
     expect(subject === (1.0..10)).to be(false)
   end
