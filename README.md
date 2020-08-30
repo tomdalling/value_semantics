@@ -50,7 +50,7 @@ Person.new(name: "Tom", birthday: "2020-12-25")
 #=> #<Person name="Tom" birthday=#<Date: 2020-12-25 ((2459209j,0s,0n),+0s,2299161j)>>
 
 Person.new(birthday: Date.today)
-#=> #<Person name="Anon Emous" birthday=#<Date: 2020-08-04 ((2459066j,0s,0n),+0s,2299161j)>>
+#=> #<Person name="Anon Emous" birthday=#<Date: 2020-08-30 ((2459092j,0s,0n),+0s,2299161j)>>
 
 Person.new(birthday: nil)
 #=> #<Person name="Anon Emous" birthday=nil>
@@ -159,7 +159,7 @@ class Cat
 end
 
 Cat.new
-#=> #<Cat paws=4 born_at=2020-08-04 00:16:35.15632 +1000>
+#=> #<Cat paws=4 born_at=2020-08-30 22:27:12.237812 +1000>
 ```
 
 The `default` option is a single value.
@@ -190,11 +190,13 @@ end
 
 Person.new(name: 'Tom', birthday: '2000-01-01')  # works
 Person.new(name: 5,     birthday: '2000-01-01')
-#=> !!! ValueSemantics::InvalidValue: Attribute `Person#name` is invalid: 5
+#=> !!! ValueSemantics::InvalidValue: Some attributes of `Person` are invalid:
+#=*       - name: 5
 
 Person.new(name: 'Tom', birthday: "1970-01-01")  # works
 Person.new(name: 'Tom', birthday: "hello")
-#=> !!! ValueSemantics::InvalidValue: Attribute `Person#birthday` is invalid: "hello"
+#=> !!! ValueSemantics::InvalidValue: Some attributes of `Person` are invalid:
+#=*       - birthday: "hello"
 ```
 
 
@@ -261,7 +263,8 @@ Server.new(address: '127.0.0.1')
 #=> #<Server address="127.0.0.1">
 
 Server.new(address: '127.0.0.999')
-#=> !!! ValueSemantics::InvalidValue: Attribute `Server#address` is invalid: "127.0.0.999"
+#=> !!! ValueSemantics::InvalidValue: Some attributes of `Server` are invalid:
+#=*       - address: "127.0.0.999"
 ```
 
 Default attribute values also pass through validation.
@@ -304,7 +307,8 @@ Document.new(path: Pathname.new('~/Documents/whatever.doc'))
 #=> #<Document path=#<Pathname:~/Documents/whatever.doc>>
 
 Document.new(path: 42)
-#=> !!! ValueSemantics::InvalidValue: Attribute `Document#path` is invalid: 42
+#=> !!! ValueSemantics::InvalidValue: Some attributes of `Document` are invalid:
+#=*       - path: 42
 ```
 
 You can also use any callable object as a coercer.
@@ -434,7 +438,7 @@ class Conditional
     else String
   }
 end
-#=> !!! SyntaxError: README.md:429: syntax error, unexpected `then'
+#=> !!! SyntaxError: README.md:461: syntax error, unexpected `then'
 #=*         then String
 #=*         ^~~~
 
