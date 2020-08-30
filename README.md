@@ -358,6 +358,34 @@ For example, the default value could be a string,
 which would then be coerced into an `Pathname` object.
 
 
+## Built-in Coercers
+
+ValueSemantics provides a few built-in coercer objects via the DSL.
+
+```ruby
+class Config
+  include ValueSemantics.for_attributes {
+    # ArrayCoercer: takes an element coercer
+    paths coerce: ArrayCoercer(Pathname.method(:new))
+
+    # HashCoercer: takes a key and value coercer
+    env coerce: HashCoercer(
+      keys: :to_sym.to_proc,
+      values: :to_i.to_proc,
+    )
+  }
+end
+
+config = Config.new(
+  paths: ['/a', '/b'],
+  env: { 'AAAA' => '1', 'BBBB' => '2' },
+)
+
+config.paths #=> [#<Pathname:/a>, #<Pathname:/b>]
+config.env #=> {:AAAA=>1, :BBBB=>2}
+```
+
+
 ## Nesting
 
 It is fairly common to nest value objects inside each other. This

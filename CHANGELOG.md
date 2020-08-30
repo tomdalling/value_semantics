@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - `RangeOf` built-in validator, for validating `Range` objects
+- `HashCoercer` built-in coercer for homogeneous `Hash` objects
 ### Changed
 - The exceptions `ValueSemantics::MissingAttributes` and
   `ValueSemantics::InvalidValue` are now raised from inside

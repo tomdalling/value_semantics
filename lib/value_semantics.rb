@@ -8,6 +8,7 @@
   dsl
   either
   hash_of
+  hash_coercer
   instance_methods
   range_of
   recipe

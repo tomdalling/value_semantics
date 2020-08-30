@@ -43,15 +43,17 @@ RSpec.describe ValueSemantics::DSL do
     expect(validator).to be === %w(1 2 3)
   end
 
-  it 'has a built-in HashOf matcher' do
-    validator = subject.HashOf(Symbol => Integer)
-    expect(validator).to be === {a: 2, b:2}
-  end
+  context 'built-in HashOf matcher' do
+    it 'matches hashes' do
+      validator = subject.HashOf(Symbol => Integer)
+      expect(validator).to be === {a: 2, b:2}
+    end
 
-  it 'raises ArgumentError if the HashOf argument is wrong' do
-    expect { subject.HashOf({a: 1, b: 2}) }.to raise_error(ArgumentError,
-      "HashOf() takes a hash with one key and one value",
-    )
+    it 'raises ArgumentError if the argument is wrong' do
+      expect { subject.HashOf({a: 1, b: 2}) }.to raise_error(ArgumentError,
+        "HashOf() takes a hash with one key and one value",
+      )
+    end
   end
 
   it 'has a built-in RangeOf matcher' do
@@ -67,6 +69,21 @@ RSpec.describe ValueSemantics::DSL do
   it 'provides a way to define methods whose names are invalid Ruby syntax' do
     subject.def_attr(:else)
     expect(subject.__attributes.first.name).to eq(:else)
+  end
+
+  context 'built-in HashCoercer coercer' do
+    it 'allows anything for keys/values by default' do
+      coercer = subject.HashCoercer()
+      expect(coercer.({whatever: 42})).to eq({whatever: 42})
+    end
+
+    it 'can take coercers for keys and values' do
+      coercer = subject.HashCoercer(
+        keys: ->(x) { x.to_sym },
+        values: ->(x) { x.to_i },
+      )
+      expect(coercer.({'x' => '1'})).to eq({x: 1})
+    end
   end
 
   it "produces a frozen recipe with DSL.run" do

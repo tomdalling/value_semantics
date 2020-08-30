@@ -60,6 +60,11 @@ module ValueSemantics
       ArrayCoercer.new(element_coercer)
     end
 
+    IDENTITY_COERCER = :itself.to_proc
+    def HashCoercer(keys: IDENTITY_COERCER, values: IDENTITY_COERCER)
+      HashCoercer.new(key_coercer: keys, value_coercer: values)
+    end
+
     #
     # Defines one attribute.
     #
