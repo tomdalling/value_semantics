@@ -29,8 +29,8 @@ module ValueSemantics
         end
 
       remaining_attrs = attributes_hash.keys
-      missing_attrs = []
-      invalid_attrs = {}
+      missing_attrs = nil
+      invalid_attrs = nil
 
       self.class.value_semantics.attributes.each do |attr|
         value =
@@ -39,6 +39,7 @@ module ValueSemantics
           elsif attr.optional?
             attr.default_generator.()
           else
+            missing_attrs ||= []
             missing_attrs << attr.name
             next
           end
@@ -47,6 +48,7 @@ module ValueSemantics
         if attr.validate?(coerced_value)
           instance_variable_set(attr.instance_variable, coerced_value)
         else
+          invalid_attrs ||= {}
           invalid_attrs[attr.name] = coerced_value
         end
       end
@@ -62,14 +64,14 @@ module ValueSemantics
         )
       end
 
-      unless missing_attrs.empty?
+      if missing_attrs
         raise MissingAttributes.new(
           "Some attributes required by `#{self.class}` are missing: " +
             missing_attrs.map { |a| "`#{a}`" }.join(', ')
         )
       end
 
-      unless invalid_attrs.empty?
+      if invalid_attrs
         raise InvalidValue.new(
           "Some attributes of `#{self.class}` are invalid:\n" +
             invalid_attrs.map { |k,v| "  - #{k}: #{v.inspect}" }.join("\n") +
