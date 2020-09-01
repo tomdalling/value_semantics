@@ -35,4 +35,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "gem-release"
   spec.add_development_dependency "eceval"
   spec.add_development_dependency "benchmark-ips"
+  spec.add_development_dependency "allocation_tracer"
 end

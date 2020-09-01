@@ -1,3 +1,5 @@
+require 'allocation_tracer'
+require 'pp'
 require 'benchmark/ips'
 require 'value_semantics'
 
@@ -65,3 +67,12 @@ Benchmark.ips do |x|
 
   x.compare!
 end
+
+puts 'Memory Allocations'.ljust(40, '-')
+pp ObjectSpace::AllocationTracer.trace {
+  i = 0
+  while i < 1000
+    VSPerson.new(name: 'Jim', age: 5)
+    i += 1
+  end
+}
