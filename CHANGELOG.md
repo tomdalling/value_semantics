@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RangeOf` built-in validator, for validating `Range` objects
 - `HashCoercer` built-in coercer for homogeneous `Hash` objects
 ### Changed
+- Exceptions raised when initialising a value object are now
+  aggregated. Instead of telling you the problematic attributes one at
+  a time, you will get a list of all offending attributes in the
+  exception message. This applies to `MissingAttributes`,
+  `InvalidValue` and `UnrecognizedAttributes`. These will probably be
+  combined into a single exception in v4.0, so you can see all the
+  initialization problems at once.
+
 - The exceptions `ValueSemantics::MissingAttributes` and
   `ValueSemantics::InvalidValue` are now raised from inside
   `initialize`. They were previously raised from inside of
