@@ -8,7 +8,7 @@ module ValueSemantics
       raise NoDefaultValue, "Attribute does not have a default value"
     end
 
-    attr_reader :name, :validator, :coercer, :default_generator
+    attr_reader :name, :validator, :coercer, :default_generator, :instance_variable
 
     def initialize(
       name:,
@@ -20,6 +20,7 @@ module ValueSemantics
       @default_generator = default_generator
       @validator = validator
       @coercer = coercer
+      @instance_variable = '@' + name.to_s.chomp('!').chomp('?')
       freeze
     end
 
@@ -91,10 +92,6 @@ module ValueSemantics
 
     def validate?(value)
       validator === value
-    end
-
-    def instance_variable
-      '@' + name.to_s.chomp('!').chomp('?')
     end
 
     def coercion_method
