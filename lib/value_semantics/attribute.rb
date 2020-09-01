@@ -57,10 +57,15 @@ module ValueSemantics
       )
     end
 
-    def determine_from(attr_hash, value_class: nil)
+    def optional?
+      not default_generator.equal?(NO_DEFAULT_GENERATOR)
+    end
+
+    # @deprecated Use a combination of the other instance methods instead
+    def determine_from!(attr_hash, value_class)
       raw_value = attr_hash.fetch(name) do
         if default_generator.equal?(NO_DEFAULT_GENERATOR)
-          return [nil, :missing]
+          raise MissingAttributes, "Attribute `#{value_class}\##{name}` has no value"
         else
           default_generator.call
         end
@@ -68,25 +73,9 @@ module ValueSemantics
 
       coerced_value = coerce(raw_value, value_class)
       if validate?(coerced_value)
-        [coerced_value, nil]
+        [name, coerced_value]
       else
-        [coerced_value, :invalid]
-      end
-    end
-
-    # @deprecated Use {#determine_from} instead
-    def determine_from!(attr_hash, value_class)
-      value, error_type = determine_from(attr_hash, value_class: value_class)
-
-      case error_type
-      when nil
-        [name, value]
-      when :invalid
-        raise InvalidValue, "Attribute `#{value_class}\##{name}` is invalid: #{value.inspect}"
-      when :missing
-        raise MissingAttributes, "Attribute `#{value_class}\##{name}` has no value"
-      else
-        fail("Unhandled error type: #{error_type.inspect}")
+        raise InvalidValue, "Attribute `#{value_class}\##{name}` is invalid: #{coerced_value.inspect}"
       end
     end
 

@@ -28,24 +28,29 @@ module ValueSemantics
           END_MESSAGE
         end
 
-      vs_attributes = self.class.value_semantics.attributes
-
+      self_class = self.class
+      vs_attributes = self_class.value_semantics.attributes
       remaining_attrs = attributes_hash.keys
       missing_attrs = []
       invalid_attrs = {}
 
       vs_attributes.each do |attr|
-        remaining_attrs.delete(attr.name)
-        value, error_type = attr.determine_from(attributes_hash, value_class: self.class)
+        attr_name = attr.name
+        value =
+          if remaining_attrs.delete(attr_name)
+            attributes_hash.fetch(attr_name)
+          elsif attr.optional?
+            attr.default_generator.()
+          else
+            missing_attrs << attr_name
+            next
+          end
 
-        if error_type.equal?(nil)
-          instance_variable_set(attr.instance_variable, value)
-        elsif error_type.equal?(:missing)
-          missing_attrs << attr.name
-        elsif error_type.equal?(:invalid)
-          invalid_attrs[attr.name] = value
+        coerced_value = attr.coerce(value, self_class)
+        if attr.validate?(coerced_value)
+          instance_variable_set(attr.instance_variable, coerced_value)
         else
-          fail "Unhandled error type: #{error_type.inspect}"
+          invalid_attrs[attr_name] = coerced_value
         end
       end
 

@@ -174,7 +174,11 @@ RSpec.describe ValueSemantics do
   describe 'validation' do
     module WingValidator
       def self.===(value)
-        /feathery/.match(value)
+        case value
+        when 'feathery flappers' then true
+        when 'smooth feet' then false
+        else fail 'wut?'
+        end
       end
     end
 
@@ -198,6 +202,10 @@ RSpec.describe ValueSemantics do
             - i: 0.0
         END_ERROR
       )
+    end
+
+    it "does not validate missing attributes" do
+      expect{ Birb.new(i: 0) }.to raise_error(ValueSemantics::MissingAttributes)
     end
   end
 
@@ -301,24 +309,6 @@ RSpec.describe ValueSemantics do
       value = CoercionTest.coercer.([['no_coercion', 'wario']])
       expect(value.no_coercion).to eq('wario')
     end
-  end
-
-  # NOTE: this test is just to make mutant happy
-  it "has a debugging error when attributes produce unhandled error types" do
-    value_class = Class.new
-    value_class.include(
-      ValueSemantics.bake_module(
-        ValueSemantics::Recipe.new(attributes: [
-          double(
-            name: :x,
-            instance_variable: '@x',
-            determine_from: [nil, :luigi],
-          )
-        ])
-      )
-    )
-
-    expect { value_class.new }.to raise_error("Unhandled error type: :luigi")
   end
 
   it "has a version number" do
