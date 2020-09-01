@@ -28,29 +28,26 @@ module ValueSemantics
           END_MESSAGE
         end
 
-      self_class = self.class
-      vs_attributes = self_class.value_semantics.attributes
       remaining_attrs = attributes_hash.keys
       missing_attrs = []
       invalid_attrs = {}
 
-      vs_attributes.each do |attr|
-        attr_name = attr.name
+      self.class.value_semantics.attributes.each do |attr|
         value =
-          if remaining_attrs.delete(attr_name)
-            attributes_hash.fetch(attr_name)
+          if remaining_attrs.delete(attr.name)
+            attributes_hash.fetch(attr.name)
           elsif attr.optional?
             attr.default_generator.()
           else
-            missing_attrs << attr_name
+            missing_attrs << attr.name
             next
           end
 
-        coerced_value = attr.coerce(value, self_class)
+        coerced_value = attr.coerce(value, self.class)
         if attr.validate?(coerced_value)
           instance_variable_set(attr.instance_variable, coerced_value)
         else
-          invalid_attrs[attr_name] = coerced_value
+          invalid_attrs[attr.name] = coerced_value
         end
       end
 
