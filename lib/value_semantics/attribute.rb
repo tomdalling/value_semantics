@@ -8,7 +8,9 @@ module ValueSemantics
       raise NoDefaultValue, "Attribute does not have a default value"
     end
 
-    attr_reader :name, :validator, :coercer, :default_generator, :instance_variable
+    attr_reader :name, :validator, :coercer, :default_generator,
+      :instance_variable, :optional
+    alias_method :optional?, :optional
 
     def initialize(
       name:,
@@ -21,6 +23,7 @@ module ValueSemantics
       @validator = validator
       @coercer = coercer
       @instance_variable = '@' + name.to_s.chomp('!').chomp('?')
+      @optional = !default_generator.equal?(NO_DEFAULT_GENERATOR)
       freeze
     end
 
@@ -56,10 +59,6 @@ module ValueSemantics
         default_generator: generator,
         coercer: coerce,
       )
-    end
-
-    def optional?
-      not default_generator.equal?(NO_DEFAULT_GENERATOR)
     end
 
     # @deprecated Use a combination of the other instance methods instead
