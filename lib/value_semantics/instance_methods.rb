@@ -33,16 +33,15 @@ module ValueSemantics
       invalid_attrs = nil
 
       self.class.value_semantics.attributes.each do |attr|
-        value =
-          if remaining_attrs.delete(attr.name)
-            attributes_hash.fetch(attr.name)
-          elsif attr.optional?
-            attr.default_generator.()
-          else
-            missing_attrs ||= []
-            missing_attrs << attr.name
-            next
-          end
+        if remaining_attrs.delete(attr.name)
+          value = attributes_hash.fetch(attr.name)
+        elsif attr.optional?
+          value = attr.default_generator.()
+        else
+          missing_attrs ||= []
+          missing_attrs << attr.name
+          next
+        end
 
         coerced_value = attr.coerce(value, self.class)
         if attr.validate?(coerced_value)
