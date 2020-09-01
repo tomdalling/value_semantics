@@ -30,22 +30,12 @@ module ValueSemantics
 
       vs_attributes = self.class.value_semantics.attributes
 
-      # TODO: aggregate all exceptions raised from #initialize into one big
-      # exception that explains everything that went wrong, instead of multiple
-      # smaller exceptions. Unfortunately, this would not be backwards
-      # compatible.
-      extraneous_attributes = attributes_hash.keys - vs_attributes.map(&:name)
-      unless extraneous_attributes.empty?
-        raise UnrecognizedAttributes.new(
-          "`#{self.class}` does not define attributes: " +
-            extraneous_attributes.map { |k| '`' + k.inspect + '`' }.join(', ')
-        )
-      end
-
+      remaining_attrs = attributes_hash.keys
       missing_attrs = []
       invalid_attrs = {}
 
       vs_attributes.each do |attr|
+        remaining_attrs.delete(attr.name)
         value, error_type = attr.determine_from(attributes_hash, value_class: self.class)
 
         if error_type.equal?(nil)
@@ -57,6 +47,17 @@ module ValueSemantics
         else
           fail "Unhandled error type: #{error_type.inspect}"
         end
+      end
+
+      # TODO: aggregate all exceptions raised from #initialize into one big
+      # exception that explains everything that went wrong, instead of multiple
+      # smaller exceptions. Unfortunately, this would not be backwards
+      # compatible.
+      unless remaining_attrs.empty?
+        raise UnrecognizedAttributes.new(
+          "`#{self.class}` does not define attributes: " +
+            remaining_attrs.map { |k| '`' + k.inspect + '`' }.join(', ')
+        )
       end
 
       unless missing_attrs.empty?
