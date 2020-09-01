@@ -22,12 +22,14 @@ end
 module ValueSemantics
   class Error < StandardError; end
   class UnrecognizedAttributes < Error; end
-  class NoDefaultValue < Error; end
   class MissingAttributes < Error; end
   class InvalidValue < ArgumentError; end
 
   # @deprecated Use {Attribute::NOT_SPECIFIED} instead
   NOT_SPECIFIED = Attribute::NOT_SPECIFIED
+
+  # @deprecated Use {Attribute#optional?} to check if there is a default or not
+  class NoDefaultValue < Error; end
 
   #
   # Creates a module via the DSL

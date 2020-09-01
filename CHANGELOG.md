@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `name`, `#coerce`, `#optional?`, `#default_generator` and
   `#validate?` methods directly if you want to extract an attribute
   from a hash.
+- `ValueSemantics::NoDefaultError`. Use `Attribute#optional?` to check
+  whether there is a default.
 
 
 
