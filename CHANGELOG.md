@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The coercer returned from the `.coercer` class method is now
   smarter. It handles string keys, handles objects that can be
   converted to hashes.
+### Deprecated
+- `ValueSemantics::Attribute#determine_from!`. This was an internal
+  implementation detail, which is no longer used internally. Use the
+  `name`, `#coerce`, `#optional?`, `#default_generator` and
+  `#validate?` methods directly if you want to extract an attribute
+  from a hash.
+
+
 
 ## [3.5.0] - 2020-08-17
 ### Added
