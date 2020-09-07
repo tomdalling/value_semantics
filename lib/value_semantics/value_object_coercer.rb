@@ -27,6 +27,10 @@ module ValueSemantics
       NOT_FOUND = Object.new.freeze
 
       def coerce_to_attr_hash(obj)
+        # TODO: this coerces nil to an empty hash, which is probably not ideal.
+        # It should not coerce nil so that Either(X, nil) validator works as
+        # expected. This is a backwards-incomptible change, so save it for a
+        # major version bump
         return nil unless obj.respond_to?(:to_h)
         obj_hash = obj.to_h
 
