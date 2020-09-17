@@ -8,6 +8,12 @@ module ValueSemantics
   # @see ValueSemantics.for_attributes
   #
   class DSL
+    # TODO: this should maybe inherit from BasicObject so that method_missing
+    # doesn't find methods on Kernel. This might have undesirable consequences
+    # tho, and we will probably need to do some const_missing stuff to get it
+    # working smoothly. Evaluate the feasability of this before the next major
+    # version bump, because it would be a backwards-incompatible change.
+
     #
     # Builds a {Recipe} from a DSL block
     #
