@@ -106,16 +106,14 @@ module ValueSemantics
     # @return A new object, with the attribute changes applied
     #
     def with(new_attrs)
-      self.class.new(to_h.merge(new_attrs))
+      self.class.new(internal_to_h.merge(new_attrs))
     end
 
     #
     # @return [Hash] all of the attributes
     #
     def to_h
-      self.class.value_semantics.attributes
-        .map { |attr| [attr.name, public_send(attr.name)] }
-        .to_h
+      internal_to_h(sender: method(:public_send))
     end
 
     #
@@ -125,7 +123,7 @@ module ValueSemantics
     #                   classes are ancestors of eachother in any way
     #
     def ==(other)
-      (other.is_a?(self.class) || is_a?(other.class)) && other.to_h.eql?(to_h)
+      (other.is_a?(self.class) || is_a?(other.class)) && other.internal_to_h.eql?(to_h)
     end
 
     #
@@ -135,18 +133,18 @@ module ValueSemantics
     #                   has the exact same class
     #
     def eql?(other)
-      other.class.equal?(self.class) && other.to_h.eql?(to_h)
+      other.class.equal?(self.class) && other.internal_to_h.eql?(internal_to_h)
     end
 
     #
     # Unique-ish integer, based on attributes and class of the object
     #
     def hash
-      to_h.hash ^ self.class.hash
+      internal_to_h.hash ^ self.class.hash
     end
 
     def inspect
-      attrs = to_h
+      attrs = internal_to_h
         .map { |key, value| "#{key}=#{value.inspect}" }
         .join(" ")
 
@@ -155,7 +153,7 @@ module ValueSemantics
 
     def pretty_print(pp)
       pp.object_group(self) do
-        to_h.each do |attr, value|
+        internal_to_h.each do |attr, value|
           pp.breakable
           pp.text("#{attr}=")
           pp.pp(value)
@@ -166,5 +164,14 @@ module ValueSemantics
     def deconstruct_keys(_)
       to_h
     end
+
+  protected
+
+    def internal_to_h(sender: method(:send))
+      self.class.value_semantics.attributes
+        .map { |attr| [attr.name, sender.(attr.name)] }
+        .to_h
+    end
+
   end
 end
