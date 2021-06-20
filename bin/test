@@ -5,7 +5,7 @@ MUTANT_PATTERN=${1:-ValueSemantics*}
 
 if [[ "${MUTATION_TEST:-true}" == "true" ]] ; then
   # The ignored subjects crash mutant, and I don't want to deal with that
-  bundle exec mutant \
+  bundle exec mutant run \
       --fail-fast \
       --ignore-subject "ValueSemantics::Struct.new" \
       --ignore-subject "ValueSemantics::DSL#HashOf" \
