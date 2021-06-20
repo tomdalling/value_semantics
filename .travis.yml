@@ -1,18 +1,19 @@
 language: ruby
 script: bin/test
 
-# test old Ruby versions WITHOUT mutation testing
+# test other Ruby versions WITHOUT mutation testing
 rvm:
   - 2.3.8
   - 2.4.10
   - 2.5.8
   - 2.6.6
+  - 3.0.1
 env: MUTATION_TEST=false
 
 # test the latest Ruby version WITH mutation testing
 matrix:
   include:
-  - rvm: 2.7.1
+  - rvm: 2.7.3
     env: MUTATION_TEST=true
 
 # deploy gem on tagged commits, on the latest Ruby version only
