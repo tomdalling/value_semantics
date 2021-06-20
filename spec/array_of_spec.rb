@@ -1,3 +1,5 @@
+require 'set'
+
 RSpec.describe ValueSemantics::ArrayOf do
   subject { described_class.new(Integer) }
 
