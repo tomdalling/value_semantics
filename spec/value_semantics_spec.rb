@@ -311,6 +311,74 @@ RSpec.describe ValueSemantics do
     end
   end
 
+  context 'when attr readers are `protected` or `private`' do
+    subject do
+      Class.new do
+        include ValueSemantics.for_attributes {
+          pubby
+          protecty
+          privvy
+        }
+
+        protected :protecty
+        private :privvy
+      end.new(pubby: 1, protecty: 2, privvy: 3)
+    end
+
+    it "doesn't affect public attrs" do
+      expect(subject.pubby).to eq(1)
+    end
+
+    it "raises NoMethodError when attempting to access non-public attrs" do
+      expect { subject.protecty }.to raise_error(NoMethodError, /protected/)
+      expect { subject[:protecty] }.to raise_error(NoMethodError, /protected/)
+
+      expect { subject.privvy }.to raise_error(NoMethodError, /private/)
+      expect { subject[:privvy] }.to raise_error(NoMethodError, /private/)
+    end
+
+    it "allows `protected` and `private` attr readers to be called from the inside" do
+      expect(subject.send(:protecty)).to eq(2)
+      expect(subject.send(:privvy)).to eq(3)
+    end
+
+    #
+    # From https://github.com/zverok/good-value-object :
+    #
+    # > Always try to provide `#to_h`, it is really good for serialization:
+    # >
+    # > - `#to_h` should probably return hash with symbolic keys, containing
+    # >   exactly all the structural elements of value object and nothing more;
+    # >
+    # > - If value object's constructor uses keyword arguments,
+    # >   `ValueType.new(**value.to_h) == value` should be always `true`
+    #
+    it 'still returns all attributes from `#to_h`' do
+      expect(subject.to_h).to eq({pubby: 1, protecty: 2, privvy: 3})
+    end
+
+    # If they can be passed to `#initialize`, then it makes sense they can also
+    # be passed to `#with`.
+    it 'allows all attrs to be updated via #with' do
+      updated = subject.with(pubby: 11, protecty: 22, privvy: 33)
+
+      expect(updated.pubby).to eq(11)
+      expect(updated.send(:protecty)).to eq(22)
+      expect(updated.send(:privvy)).to eq(33)
+    end
+
+    it 'does not break other methods' do
+      clone = subject.with({})
+      expect(subject).not_to be(clone)
+      expect(subject).to eq(clone)
+      expect(subject).to eql(clone)
+
+      expect(subject.hash).not_to be_nil
+      expect(subject.inspect).to include('pubby', 'protecty', 'privvy')
+      expect(subject.deconstruct_keys(nil)).to eq(subject.to_h)
+    end
+  end
+
   it "has a version number" do
     expect(ValueSemantics::VERSION).not_to be_empty
   end

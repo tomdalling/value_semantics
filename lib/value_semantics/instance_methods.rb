@@ -114,7 +114,7 @@ module ValueSemantics
     #
     def to_h
       self.class.value_semantics.attributes
-        .map { |attr| [attr.name, public_send(attr.name)] }
+        .map { |attr| [attr.name, __send__(attr.name)] }
         .to_h
     end
 
