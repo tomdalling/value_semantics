@@ -36,7 +36,7 @@ module ValueSemantics
         if remaining_attrs.delete(attr.name)
           value = attributes_hash.fetch(attr.name)
         elsif attr.optional?
-          value = attr.default_generator.()
+          value = instance_exec(&attr.default_generator)
         else
           missing_attrs ||= []
           missing_attrs << attr.name
